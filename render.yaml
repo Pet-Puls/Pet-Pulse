@@ -9,9 +9,19 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22"
       - key: CLERK_AUTH_MODE
         value: external
+      # Supabase exige TLS en conexiones externas.
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_POOL_MAX
+        value: "5"
+      # Secretos: se completan en el panel de Render, nunca en este archivo.
       - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL_CA
         sync: false
       - key: CLERK_PUBLISHABLE_KEY
         sync: false
