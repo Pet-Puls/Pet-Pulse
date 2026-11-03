@@ -10,7 +10,7 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+router.use("/provider-profile", requireAuth);
 
 router.get(
   "/provider-profile",
