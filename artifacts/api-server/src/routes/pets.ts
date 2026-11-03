@@ -14,7 +14,7 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth);
+router.use("/pets", requireAuth);
 
 router.get("/pets", requireRole("owner"), async (req, res): Promise<void> => {
   const profile = req.petPulseProfile;
