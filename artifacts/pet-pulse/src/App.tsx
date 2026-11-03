@@ -44,6 +44,11 @@ function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
 }
 if (!clerkPubKey) throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
+if (import.meta.env.PROD && !apiBaseUrl) {
+  throw new Error(
+    'Missing VITE_API_BASE_URL: define la URL de la API (Render) en las variables de Vercel y vuelve a desplegar.',
+  );
+}
 
 const clerkAppearance = {
   theme: shadcn,
