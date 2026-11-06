@@ -12,7 +12,7 @@ Este paquete contiene el código fuente actual del prototipo y los documentos pa
 
 ## Estado del prototipo
 
-PetPulse conserva una demostración interactiva con datos ficticios en el navegador y una base real de cuentas, roles y persistencia de mascotas y proveedores. El directorio, las citas, el mapa/GPS, las notificaciones y otros flujos de producción siguen pendientes. Consulta el Documento Maestro y la guía de despliegue antes de tratar una interacción de demostración como una capacidad real.
+PetPulse conserva una demostración interactiva con datos ficticios en el navegador y una base real de cuentas, roles y persistencia de mascotas y proveedores. La ruta `/demo/map` sigue siendo simulada y aislada. La ruta `/map` inicia centrada en Medellín, Antioquia, y consulta con Photon veterinarias, comercios para mascotas, parques, espacios culturales/de eventos, cafés y restaurantes registrados en OpenStreetMap. También permite usar la ubicación del dispositivo con permiso explícito o buscar otra zona; la ubicación se envía a Photon para la búsqueda, no se guarda en PetPulse ni rastrea a las mascotas. Los espacios culturales/de eventos no representan una agenda de eventos actuales. Antes de usar el mapa con tráfico de producción hay que revisar los límites de los servicios públicos de mapas y búsqueda o seleccionar un proveedor con capacidad adecuada. El directorio comercial de PetPulse, las citas, el GPS de mascotas, las notificaciones y otros flujos siguen pendientes. Consulta el Documento Maestro antes de tratar una interacción de demostración como una capacidad real.
 
 ## Tecnologías
 
@@ -20,6 +20,13 @@ PetPulse conserva una demostración interactiva con datos ficticios en el navega
 - API: Node.js, TypeScript, Express 5, Clerk y contratos OpenAPI con cliente generado.
 - Datos: PostgreSQL, Drizzle ORM y migraciones SQL.
 - Workspace/deployment: pnpm monorepo; manifiestos para Vercel, Render y Supabase.
+
+## Organización de la interfaz
+
+- `artifacts/pet-pulse/src/app/` configura Clerk, el cliente de consultas y el puente de autenticación con la API.
+- `artifacts/pet-pulse/src/pages/` contiene las páginas públicas, de cuenta, de proveedores y de administración.
+- `artifacts/pet-pulse/src/features/map/` agrupa los tipos y consultas de lugares del mapa.
+- `artifacts/pet-pulse/src/components/` contiene componentes compartidos y la interfaz del mapa.
 
 ## Ejecución en el workspace
 

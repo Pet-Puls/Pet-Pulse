@@ -121,13 +121,13 @@ En el prototipo se cambia entre tres vistas mediante un selector. Esto sirve par
 
 ### 5.2 Funciones que faltan para una aplicación real
 
-- Registro, inicio de sesión, recuperación de cuenta y roles protegidos.
-- API y base de datos de PetPulse.
-- Aislamiento y propiedad de datos por usuario, negocio y organización.
+- Recuperación de cuenta y políticas de retención/eliminación.
+- Ampliar el aislamiento y la propiedad de datos para organizaciones y equipos.
 - Edición, eliminación, validación y recuperación de registros.
 - Historial médico básico y recordatorios.
 - Perfiles comerciales editables, disponibilidad y gestión real de citas.
-- Mapas reales, fuente real de ubicación y permisos de seguimiento.
+- GPS o seguimiento real de mascotas, alertas conectadas a ubicación y publicación de ubicaciones compartidas.
+- Coordenadas verificadas para los perfiles comerciales de PetPulse y un proveedor de mapas/lugares con capacidad operativa adecuada para producción.
 - QR válido y escaneable con reglas de privacidad.
 - Canales de comunicación reales y controles de entrega.
 - Verificación y moderación de proveedores.
@@ -338,7 +338,9 @@ No almacenar fotos o documentos en columnas de texto/base64 si existe almacenami
 
 PetPulse ya usa Express 5, contratos OpenAPI con cliente/hooks generados, PostgreSQL con Drizzle y Clerk para autenticación. La API protege el perfil de cuenta, la configuración inicial, las mascotas, el perfil comercial y la administración de proveedores. La autoridad de roles y propiedad de datos está en el servidor; la lista de administradores se configura con correos verificados. El estado del proveedor se mantiene pendiente hasta una decisión administrativa.
 
-La web mantiene rutas para la experiencia de cuenta y para la demostración local. La implementación actual no convierte los datos simulados de la demo en datos reales ni incluye GPS, notificaciones externas, un directorio conectado a proveedores reales o reservas de producción.
+La web mantiene rutas separadas para la experiencia de cuenta y para la demostración local. El mapa de cuenta inicia centrado en Medellín, Antioquia, y consulta con Photon lugares cercanos catalogados en OpenStreetMap, como veterinarias, tiendas para mascotas, parques, espacios culturales y de eventos, restaurantes y cafés. Permite consultar la ubicación del dispositivo solo tras una acción y permiso explícitos, o buscar una dirección manualmente. Esa ubicación no se guarda en PetPulse ni representa la posición de una mascota. Los espacios culturales/de eventos son lugares, no una agenda de eventos actuales. La demostración sigue usando sus propios datos simulados; no incluye GPS de mascotas, notificaciones externas, un directorio conectado a perfiles comerciales de PetPulse ni reservas de producción.
+
+La primera versión del mapa usa teselas de OpenStreetMap y Photon para geocodificación y búsqueda cercana filtrada por categorías de OpenStreetMap. Las coordenadas consultadas se envían a Photon; la ubicación no se persiste en PetPulse. Los servicios son públicos y no ofrecen una garantía de disponibilidad adecuada para producción; antes de un lanzamiento con tráfico relevante se deben revisar sus políticas y límites y, si el uso lo requiere, contratar o desplegar servicios con capacidad y nivel de disponibilidad adecuados.
 
 Para recrear el despliegue en servicios externos se añadieron configuraciones separadas: Vercel para la interfaz, Render para la API, Supabase para PostgreSQL y una instancia Clerk externa para las cuentas fuera de Replit. La guía paso a paso está en `docs/deployment/PetPulse-Despliegue-Portatil.md`.
 
@@ -368,8 +370,9 @@ Estas etapas quedan como guía de avance y preservan el alcance solicitado:
 
 ### Etapa B — Ubicación real con controles de privacidad
 
+- Implementado inicialmente: mapa interactivo con teselas de OpenStreetMap, ubicación del dispositivo bajo permiso y búsqueda manual de una zona; consulta lugares cercanos en datos abiertos. No es rastreo de mascotas.
+- Pendiente: seleccionar servicios de mapas, geocodificación y búsqueda con capacidad/condiciones apropiadas para producción.
 - Seleccionar la fuente real: collar compatible, teléfono u otro dispositivo autorizado.
-- Elegir proveedor de mapas y definir el coste/uso de geocodificación.
 - Permitir iniciar, pausar y retirar el seguimiento.
 - Mostrar precisión y hora de actualización; diferenciar señal real de última ubicación guardada.
 - Definir divulgación limitada y temporal durante una alerta de pérdida.
