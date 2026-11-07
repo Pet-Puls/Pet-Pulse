@@ -79,6 +79,10 @@ export interface PetProfile {
   age: string | null;
   /** @nullable */
   emergencyContact: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  qrEnabled: boolean;
+  shareEmergencyContact: boolean;
   status: PetProfileStatus;
   createdAt: string;
   updatedAt: string;
@@ -110,6 +114,7 @@ export interface PetInput {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
 }
 
 export type PetUpdateStatus = typeof PetUpdateStatus[keyof typeof PetUpdateStatus];
@@ -147,7 +152,27 @@ export interface PetUpdate {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
   status?: PetUpdateStatus;
+}
+
+export interface PetQrResponse {
+  /**
+     * @minLength 43
+     * @maxLength 43
+     */
+  token: string;
+}
+
+export interface PublicPetProfile {
+  name: string;
+  species: string;
+  /** @nullable */
+  breed: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @nullable */
+  emergencyContact: string | null;
 }
 
 export type ProviderProfileCategory = typeof ProviderProfileCategory[keyof typeof ProviderProfileCategory];

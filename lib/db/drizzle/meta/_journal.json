@@ -8,6 +8,13 @@
       "when": 1793105854557,
       "tag": "0000_robust_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794060000000,
+      "tag": "0001_pet_photos_and_qr",
+      "breakpoints": true
     }
   ]
 }

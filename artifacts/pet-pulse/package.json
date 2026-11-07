@@ -78,6 +78,7 @@
   "dependencies": {
     "@clerk/react": "^6.18.1",
     "@clerk/themes": "^2.4.57",
-    "leaflet": "^1.9.4"
+    "leaflet": "^1.9.4",
+    "qrcode.react": "^4.2.0"
   }
 }

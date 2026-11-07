@@ -18,6 +18,7 @@ import OnboardingPage from '@/pages/OnboardingPage';
 import PetsPage from '@/pages/PetsPage';
 import PublicHomePage from '@/pages/PublicHomePage';
 import ProviderPage from '@/pages/ProviderPage';
+import PublicPetPage from '@/pages/PublicPetPage';
 import WorkspaceHomePage from '@/pages/WorkspaceHomePage';
 import NotFound from '@/pages/not-found';
 import { Toaster } from '@/components/ui/toaster';
@@ -65,7 +66,8 @@ function RouterContent() {
         <Route path="/" component={PublicHomePage}/>
         <Route path="/sign-in/*?" component={SignInPage}/>
         <Route path="/sign-up/*?" component={SignUpPage}/>
-        <Route path="/demo/*?" component={DemoApp}/>
+        <Route path="/demo/*?" component={() => <DemoApp/>}/>
+        <Route path="/pet/:token">{params => <PublicPetPage token={params.token}/>}</Route>
         <Route path="/onboarding" component={OnboardingPage}/>
         <Route path="/workspace"><PrivateRoute>{me => <WorkspaceHomePage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace/map"><PrivateRoute>{() => <Suspense fallback={<MapLoadingState/>}><WorkspaceMapPage/></Suspense>}</PrivateRoute></Route>
