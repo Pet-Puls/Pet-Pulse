@@ -40,16 +40,20 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
   const { signOut } = useClerk();
   const nav = [
     { href: '/workspace', label: 'Resumen', icon: Home },
-    { href: '/workspace/map', label: 'Mapa cercano', icon: MapPin },
-    ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mis mascotas', icon: PawPrint }] : []),
-    ...(me.role === 'provider' ? [{ href: '/workspace/provider', label: 'Mi perfil comercial', icon: Store }] : []),
-    ...(me.role === 'admin' ? [{ href: '/workspace/admin', label: 'Administración', icon: ShieldCheck }] : []),
+    { href: '/workspace/map', label: 'Mapa', icon: MapPin },
+    ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mascotas', icon: PawPrint }] : []),
+    ...(me.role === 'provider' ? [{ href: '/workspace/provider', label: 'Mi perfil', icon: Store }] : []),
+    ...(me.role === 'admin' ? [{ href: '/workspace/admin', label: 'Admin', icon: ShieldCheck }] : []),
   ];
   const initials = me.displayName.split(/\s+/).slice(0, 2).map(n => n[0]?.toUpperCase() || '').join('') || 'PP';
 
   return <div className="account-layout">
     <aside className="account-side"><Brand/><div className="account-nav-label">Tu espacio</div><nav className="account-nav" aria-label="Navegación de cuenta">{nav.map(item => { const Icon = item.icon; return <Link key={item.href} href={item.href} className={path === item.href ? 'active' : ''}><Icon size={17}/>{item.label}</Link>; })}</nav><div className="account-side-foot"><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 7 }}><ShieldCheck size={15}/> Cuenta protegida</div>Tu información permanece asociada a tu cuenta.</div></aside>
-    <div className="account-main"><header className="account-topbar"><span>PetPulse <ChevronRight size={13} style={{ verticalAlign: 'middle', margin: '0 5px' }}/><strong style={{ color: '#365f50' }}>{me.role === 'owner' ? 'Espacio tutor' : me.role === 'provider' ? 'Espacio proveedor' : 'Administración'}</strong></span><div className="account-top-actions"><span>{me.displayName}</span><div className="account-avatar" aria-label={`Perfil de ${me.displayName}`}>{initials}</div><button className="account-button outline tiny" onClick={() => void signOut({ redirectUrl: basePath || '/' })}><LogOut size={14}/> Salir</button></div></header>{children}</div>
+    <div className="account-main"><header className="account-topbar"><span>PetPulse <ChevronRight size={13} style={{ verticalAlign: 'middle', margin: '0 5px' }}/><strong style={{ color: '#365f50' }}>{me.role === 'owner' ? 'Espacio tutor' : me.role === 'provider' ? 'Espacio proveedor' : 'Administración'}</strong></span><div className="account-top-actions"><span>{me.displayName}</span><div className="account-avatar" aria-label={`Perfil de ${me.displayName}`}>{initials}</div><button className="account-button outline tiny" onClick={() => void signOut({ redirectUrl: basePath || '/' })}><LogOut size={14}/> Salir</button></div></header><div className="account-content">{children}</div></div>
+    <nav className="account-mobile-nav" aria-label="Navegación de cuenta móvil">{nav.map(item => {
+      const Icon = item.icon;
+      return <Link key={item.href} href={item.href} aria-current={path === item.href ? 'page' : undefined} className={path === item.href ? 'active' : ''}><Icon size={19}/><span>{item.label}</span></Link>;
+    })}</nav>
   </div>;
 }
 
