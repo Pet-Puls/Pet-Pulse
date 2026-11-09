@@ -222,6 +222,178 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /pets/{petId}/photo:
+    put:
+      operationId: uploadPetPhoto
+      tags: [pets]
+      summary: Upload or replace a pet's private photo
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Pet profile with the uploaded photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PetProfile"
+        "400":
+          description: Invalid image content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Pet not found for the current owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "413":
+          description: Image exceeds the 5 MB limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "415":
+          description: Unsupported image type or invalid image data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "500":
+          description: The photo could not be uploaded or signed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /pets/{petId}/qr:
+    post:
+      operationId: createPetQr
+      tags: [pets]
+      summary: Create or retrieve the current owner's revocable pet QR token
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: QR token for the current owner's pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PetQrResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Pet not found for the current owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    delete:
+      operationId: revokePetQr
+      tags: [pets]
+      summary: Revoke a pet's public QR profile
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Public QR token revoked
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Pet not found for the current owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /public/pets/{token}:
+    get:
+      operationId: getPublicPet
+      tags: [pets]
+      summary: Get the limited public profile associated with a QR token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 43
+            maxLength: 43
+      responses:
+        "200":
+          description: Limited pet profile shared by its owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicPetProfile"
+        "404":
+          description: QR profile unavailable or revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /provider-profile:
     get:
       operationId: getProviderProfile
@@ -468,6 +640,13 @@ components:
           type: ["string", "null"]
         emergencyContact:
           type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+          format: uri
+        qrEnabled:
+          type: boolean
+        shareEmergencyContact:
+          type: boolean
         status:
           type: string
           enum: [home, walking, lost]
@@ -484,6 +663,9 @@ components:
         - breed
         - age
         - emergencyContact
+        - photoUrl
+        - qrEnabled
+        - shareEmergencyContact
         - status
         - createdAt
         - updatedAt
@@ -507,6 +689,8 @@ components:
         emergencyContact:
           type: ["string", "null"]
           maxLength: 240
+        shareEmergencyContact:
+          type: boolean
       required:
         - name
         - species
@@ -531,9 +715,40 @@ components:
         emergencyContact:
           type: ["string", "null"]
           maxLength: 240
+        shareEmergencyContact:
+          type: boolean
         status:
           type: string
           enum: [home, walking, lost]
+    PetQrResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 43
+          maxLength: 43
+      required:
+        - token
+    PublicPetProfile:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+          format: uri
+        emergencyContact:
+          type: ["string", "null"]
+      required:
+        - name
+        - species
+        - breed
+        - photoUrl
+        - emergencyContact
     ProviderProfile:
       type: object
       properties:
@@ -616,4 +831,3 @@ components:
         - pets
         - providerProfiles
         - pendingProviders
-

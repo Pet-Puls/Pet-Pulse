@@ -123,6 +123,15 @@ app.use(
     } else {
       logger.error({ err: error }, "Unhandled API error");
     }
+    if (
+      error &&
+      typeof error === "object" &&
+      "type" in error &&
+      error.type === "entity.too.large"
+    ) {
+      res.status(413).json({ error: "La imagen supera el límite de 5 MB." });
+      return;
+    }
     res.status(500).json({ error: "Ocurrió un error inesperado." });
   },
 );

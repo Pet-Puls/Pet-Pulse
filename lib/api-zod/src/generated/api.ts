@@ -68,6 +68,9 @@ export const ListPetsResponseItem = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -95,7 +98,8 @@ export const CreatePetBody = zod.object({
   "species": zod.string().min(1).max(createPetBodySpeciesMax),
   "breed": zod.string().max(createPetBodyBreedMax).nullish(),
   "age": zod.string().max(createPetBodyAgeMax).nullish(),
-  "emergencyContact": zod.string().max(createPetBodyEmergencyContactMax).nullish()
+  "emergencyContact": zod.string().max(createPetBodyEmergencyContactMax).nullish(),
+  "shareEmergencyContact": zod.boolean().optional()
 })
 
 export const CreatePetResponse = zod.object({
@@ -105,6 +109,9 @@ export const CreatePetResponse = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -136,6 +143,7 @@ export const UpdatePetBody = zod.object({
   "breed": zod.string().max(updatePetBodyBreedMax).nullish(),
   "age": zod.string().max(updatePetBodyAgeMax).nullish(),
   "emergencyContact": zod.string().max(updatePetBodyEmergencyContactMax).nullish(),
+  "shareEmergencyContact": zod.boolean().optional(),
   "status": zod.enum(['home', 'walking', 'lost']).optional()
 })
 
@@ -146,6 +154,9 @@ export const UpdatePetResponse = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -160,6 +171,77 @@ export const DeletePetParams = zod.object({
 })
 
 export const DeletePetResponse = zod.void()
+
+
+/**
+ * @summary Upload or replace a pet's private photo
+ */
+export const UploadPetPhotoParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const UploadPetPhotoResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "age": zod.string().nullable(),
+  "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
+  "status": zod.enum(['home', 'walking', 'lost']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create or retrieve the current owner's revocable pet QR token
+ */
+export const CreatePetQrParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const createPetQrResponseTokenMin = 43;
+export const createPetQrResponseTokenMax = 43;
+
+
+
+export const CreatePetQrResponse = zod.object({
+  "token": zod.string().min(createPetQrResponseTokenMin).max(createPetQrResponseTokenMax)
+})
+
+
+/**
+ * @summary Revoke a pet's public QR profile
+ */
+export const RevokePetQrParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const RevokePetQrResponse = zod.void()
+
+
+/**
+ * @summary Get the limited public profile associated with a QR token
+ */
+export const getPublicPetPathTokenMin = 43;
+export const getPublicPetPathTokenMax = 43;
+
+
+
+export const GetPublicPetParams = zod.object({
+  "token": zod.coerce.string().min(getPublicPetPathTokenMin).max(getPublicPetPathTokenMax)
+})
+
+export const GetPublicPetResponse = zod.object({
+  "name": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "emergencyContact": zod.string().nullable()
+})
 
 
 /**
