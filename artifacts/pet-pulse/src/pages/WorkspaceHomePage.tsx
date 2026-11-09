@@ -38,7 +38,7 @@ export default function WorkspaceHomePage({ me }: { me: MeProfile }) {
 }
 
 export function PetSummary({ pet }: { pet: PetProfile }) {
-  return <article className="account-panel pet-row"><span className="pet-mark"><PawPrint size={23}/></span><div className="pet-description"><h3>{pet.name}</h3><p>{pet.species}{pet.breed ? ` · ${pet.breed}` : ''}</p></div><span className={`pet-status ${pet.status}`}>{pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Perdida'}</span></article>;
+  return <article className="account-panel pet-row"><span className="pet-mark pet-mark-photo">{pet.photoUrl ? <img src={pet.photoUrl} alt={`Foto de ${pet.name}`}/> : <PawPrint size={23}/>}</span><div className="pet-description"><h3>{pet.name}</h3><p>{pet.species}{pet.breed ? ` · ${pet.breed}` : ''}</p></div><span className={`pet-status ${pet.status}`}>{pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Perdida'}</span></article>;
 }
 
 function ProviderWorkspaceIntro({ me }: { me: MeProfile }) {
