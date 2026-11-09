@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import { Route, Switch, useLocation, Router as WouterRouter, Link } from 'wouter';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Activity, AlertTriangle, ArrowRight, CalendarDays, Check, ChevronRight,
   CircleHelp, Clock3, Dog, Heart, Home, MapPin, Menu, Navigation, PawPrint,
@@ -20,9 +21,9 @@ type Appointment = { id: string; providerId: string; title: string; category: st
 type LostAlert = { petId: string; status: 'active' | 'resolved'; location: string; time: string };
 const client = new QueryClient();
 const seedPets: Pet[] = [
-  { id: 'p-luna', name: 'Luna', species: 'Perra', breed: 'Mestiza · 4 años', age: '4 años', emergency: '+34 612 483 920 · Marina', status: 'home', x: 35, y: 43, color: 'peach' },
-  { id: 'p-nube', name: 'Nube', species: 'Gato', breed: 'Europeo · 2 años', age: '2 años', emergency: '+34 612 483 920 · Marina', status: 'walking', x: 60, y: 59, color: 'sage' },
-  { id: 'p-bruno', name: 'Bruno', species: 'Perro', breed: 'Beagle · 6 años', age: '6 años', emergency: '+34 612 483 920 · Marina', status: 'home', x: 73, y: 34, color: 'lilac' },
+  { id: 'p-luna', name: 'Luna', species: 'Perra', breed: 'Mestiza · 4 años', age: '4 años', emergency: '+57 300 000 0000 · Marina', status: 'home', x: 35, y: 43, color: 'peach' },
+  { id: 'p-nube', name: 'Nube', species: 'Gato', breed: 'Europeo · 2 años', age: '2 años', emergency: '+57 300 000 0000 · Marina', status: 'walking', x: 60, y: 59, color: 'sage' },
+  { id: 'p-bruno', name: 'Bruno', species: 'Perro', breed: 'Beagle · 6 años', age: '6 años', emergency: '+57 300 000 0000 · Marina', status: 'home', x: 73, y: 34, color: 'lilac' },
 ];
 const seedProviders: Provider[] = [
   { id: 'v1', name: 'Clínica Vet Alameda', category: 'Veterinaria', neighborhood: 'Malasaña', rating: 4.9, services: ['Consulta general', 'Vacunación', 'Urgencias'], x: 23, y: 34 },
@@ -86,7 +87,6 @@ function Shell({ children, state }: { children: ReactNode; state: State }) {
       <div className="side-bottom"><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 9 }}><CircleHelp size={15}/> Un lugar más seguro para ellos.</div><div>Prototipo interactivo · datos simulados</div></div>
     </aside>
     <div className="main-area">
-      <div className="demo-banner"><CircleHelp size={15}/> Demostración interactiva · datos locales de prueba, aislados de las cuentas PetPulse</div>
       <header className="topbar">
         <div className="crumb">Madrid <span style={{ margin: '0 8px', color: '#b7bcb1' }}>/</span><strong style={{ color: '#315c52' }}>{pageTitle[path] || 'PetPulse'}</strong></div>
         <div className="top-right">
@@ -113,9 +113,30 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function Field({ label, children, full = false }: { label: string; children: ReactNode; full?: boolean }) {
   return <div className={`form-field ${full ? 'full' : ''}`}><label className="field-label">{label}{children}</label></div>;
 }
+function petPhoto(pet: Pet) {
+  if (pet.species.toLowerCase().includes('gato')) return 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=900&q=80';
+  if (pet.breed.toLowerCase().includes('beagle')) return 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=900&q=80';
+  return 'https://images.unsplash.com/photo-1693615774599-ea266ebf51f4?auto=format&fit=crop&w=900&q=80';
+}
+function petQrValue(pet: Pet) {
+  const phone = pet.emergency?.match(/\+?\d[\d\s().-]{7,}/)?.[0]?.replace(/[^\d+]/g, '');
+  return phone ? `tel:${phone}` : 'Teléfono de emergencia no indicado';
+}
+function PetQrCode({ pet, size = 120 }: { pet: Pet; size?: number }) {
+  return <QRCodeSVG
+    value={petQrValue(pet)}
+    size={size}
+    level="M"
+    marginSize={4}
+    bgColor="#ffffff"
+    fgColor="#174d49"
+    title={`Código QR de emergencia de ${pet.name}`}
+    className="qr-generated"
+  />;
+}
 function PetCard({ pet, onQR, onLost }: { pet: Pet; onQR: () => void; onLost: () => void }) {
   return <article className="panel pet-card" data-testid={`card-pet-${pet.id}`}>
-    <div className={`pet-art ${pet.color}`} style={{ background: pet.color === 'peach' ? '#f4d5bd' : pet.color === 'sage' ? '#dce9db' : '#e6deef' }}><span className="pet-avatar"><Dog size={44}/></span><span className={`status ${pet.status}`} style={{ position: 'absolute', top: 13, right: 13 }}>{pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Perdida'}</span></div>
+    <div className={`pet-art ${pet.color}`}><img className="pet-photo" src={petPhoto(pet)} alt={`Foto de ${pet.name}`} loading="lazy"/><span className={`status ${pet.status}`} style={{ position: 'absolute', top: 13, right: 13 }}>{pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Perdida'}</span></div>
     <div className="pet-info"><div className="pet-info-top"><div><h3 className="display" style={{ fontSize: 19 }}>{pet.name}</h3><p className="pet-meta">{pet.breed}</p></div><span style={{ color: '#d4a348' }}><Heart size={18}/></span></div>
       <div className="pet-actions"><button className="btn ghost small" onClick={onQR} data-testid={`button-qr-${pet.id}`}><QrCode size={14}/> QR de {pet.name}</button><button className={`btn small ${pet.status === 'lost' ? 'secondary' : 'danger'}`} onClick={onLost} data-testid={`button-alert-${pet.id}`}>{pet.status === 'lost' ? <><Check size={14}/> Resolver</> : <><AlertTriangle size={13}/> Alerta</>}</button></div>
     </div>
@@ -142,7 +163,7 @@ function HomePage({ state }: { state: State }) {
     <div className="grid grid-3">{state.pets.slice(0, 3).map(pet => <PetCard key={pet.id} pet={pet} onQR={() => setQrPet(pet)} onLost={() => toggleLost(pet)}/>)}</div>
     <div className="grid grid-2" style={{ marginTop: 22 }}><section className="panel"><div className="section-row" style={{ marginTop: 0 }}><h2 className="display">Lo que viene</h2><Link href="/services" className="text-link">Todas las citas <ArrowRight size={14}/></Link></div>{upcoming.length ? upcoming.map(a => <AppointmentRow key={a.id} appointment={a} provider={state.providers.find(p => p.id === a.providerId)}/>) : <Empty icon={CalendarDays} title="Tu agenda está libre" text="Encuentra cuidado de confianza en tu zona."/>}</section><section className="panel" style={{ background: '#f4ead5' }}><div className="eyebrow">Red PetPulse</div><h2 className="display">Un barrio que cuida.</h2><p className="subtle">Encuentra profesionales locales y conoce a quienes comparten tus paseos.</p><Link href="/directory" className="btn secondary" data-testid="button-directory-home"><Store size={16}/> Descubrir profesionales <ArrowRight size={15}/></Link><div style={{ display: 'flex', gap: 9, marginTop: 22, alignItems: 'center', color: '#5d7668', fontSize: 11 }}><ShieldCheck size={18}/> Perfiles locales con información clara</div></section></div>
     <div className="notice" style={{ marginTop: 20 }}><LocateFixed size={16}/> <span><strong>Una nota importante:</strong> Las ubicaciones y los datos de este prototipo son simulados. PetPulse no utiliza GPS real ni servicios conectados.</span></div>
-    {qrPet && <Modal title={`Ficha de ${qrPet.name}`} onClose={() => setQrPet(null)}><div className="qr-card"><div className="qr-code"/><strong className="display" style={{ fontSize: 20 }}>{qrPet.name}</strong><p className="subtle" style={{ margin: '5px 0 0' }}>Código de identificación simulado</p></div><div style={{ marginTop: 18, padding: '16px', border: '1px solid #e7e3d8', borderRadius: 13 }}><div className="eyebrow">Información de emergencia</div><strong>{qrPet.species} · {qrPet.breed.split(' · ')[0]}</strong><p className="subtle" style={{ margin: '6px 0 0' }}>{qrPet.emergency || 'Contacto no indicado'}</p></div></Modal>}
+    {qrPet && <Modal title={`Tarjeta QR de ${qrPet.name}`} onClose={() => setQrPet(null)}><div className="qr-card"><div className="qr-card-top"><img src={petPhoto(qrPet)} alt={`Foto de ${qrPet.name}`} className="qr-pet-photo"/><div><span className="eyebrow">Identificación PetPulse</span><strong className="display qr-pet-name">{qrPet.name}</strong><span className="qr-pet-meta">{qrPet.species} · {qrPet.breed.split(' · ')[0]} · {qrPet.age || 'Edad no indicada'}</span></div></div><div className="qr-card-bottom"><div><div className="eyebrow">Teléfono de emergencia</div><strong>{qrPet.emergency || 'Contacto no indicado'}</strong></div><PetQrCode pet={qrPet} size={128}/></div><p className="subtle qr-caption">Al escanear, se abre el marcador con el número de emergencia.</p></div></Modal>}
   </main>;
 }
 function AppointmentRow({ appointment, provider }: { appointment: Appointment; provider?: Provider }) {
@@ -167,9 +188,9 @@ function PetPage({ state }: { state: State }) {
   return <main className="content">
     <Heading eyebrow="Su identidad, siempre a mano" title="Mis mascotas" desc="Perfiles sencillos para que cualquier persona pueda ayudarles." action={<button className="btn" onClick={() => setShowAdd(true)} data-testid="button-add-pet"><Plus size={16}/> Añadir mascota</button>}/>
     {state.pets.length === 0 ? <section className="panel"><Empty icon={PawPrint} title="Aún no hay mascotas" text="Crea el primer perfil para tener su información importante a mano."/></section> : <div className="grid grid-3">{state.pets.map(pet => <PetCard key={pet.id} pet={pet} onQR={() => setQrPet(pet)} onLost={() => toggleLost(pet)}/>)}</div>}
-    <div className="section-row"><h2 className="display">Identificación de emergencia</h2></div><section className="panel grid grid-2" style={{ alignItems: 'center' }}><div><div className="stat-icon" style={{ width: 42, height: 42, marginBottom: 13 }}><ScanLine size={20}/></div><h2 className="display">Una ayuda a un escaneo de distancia.</h2><p className="subtle">Cada mascota tiene una ficha QR simulada con su nombre y contacto de emergencia. No se realiza ningún escaneo real.</p><button className="btn secondary" onClick={() => setQrPet(state.pets[0] || null)} disabled={!state.pets.length} data-testid="button-scan-qr"><QrCode size={16}/> Simular lectura QR</button></div><div style={{ display: 'flex', justifyContent: 'center' }}><div className="qr-code" aria-label="Código QR de demostración"/></div></section>
-    {showAdd && <Modal title="Nueva mascota" onClose={() => setShowAdd(false)}><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const name = String(f.get('name')).trim(); if (!name) return; const pet: Pet = { id: `p-${Date.now()}`, name, species: String(f.get('species')), breed: `${String(f.get('breed') || 'Sin raza indicada')} · ${String(f.get('age'))}`, age: String(f.get('age')), emergency: String(f.get('emergency')), status: 'home', x: 50, y: 50, color: ['peach', 'sage', 'lilac'][state.pets.length % 3] }; state.setPets(prev => [...prev, pet]); setShowAdd(false); state.notify(`${name} ya forma parte de PetPulse.`); }}><div className="form-grid"><Field label="Nombre"><input className="field" name="name" required placeholder="Ej. Chispa" data-testid="input-pet-name"/></Field><Field label="Especie"><select className="field" name="species" data-testid="select-pet-species"><option>Perro</option><option>Gato</option><option>Otro</option></select></Field><Field label="Raza"><input className="field" name="breed" placeholder="Ej. Mestiza" data-testid="input-pet-breed"/></Field><Field label="Edad"><input className="field" name="age" placeholder="Ej. 3 años" data-testid="input-pet-age"/></Field><Field label="Contacto de emergencia" full><input className="field" name="emergency" required placeholder="+34 600 000 000 · Nombre" data-testid="input-emergency-contact"/></Field></div><div className="form-actions"><button type="button" className="btn ghost" onClick={() => setShowAdd(false)}>Cancelar</button><button className="btn" type="submit" data-testid="button-save-pet"><Plus size={15}/> Guardar perfil</button></div></form></Modal>}
-    {qrPet && <Modal title={`Ficha de ${qrPet.name}`} onClose={() => setQrPet(null)}><div className="qr-card"><div className="qr-code"/><strong className="display" style={{ fontSize: 20 }}>{qrPet.name}</strong><p className="subtle" style={{ margin: '5px 0 0' }}>Código de identificación simulado</p></div><div style={{ marginTop: 18, padding: '16px', border: '1px solid #e7e3d8', borderRadius: 13 }}><div className="eyebrow">Información de emergencia</div><strong>{qrPet.species} · {qrPet.breed.split(' · ')[0]}</strong><p className="subtle" style={{ margin: '6px 0 0' }}>{qrPet.emergency || 'Contacto no indicado'}</p></div><div className="notice" style={{ marginTop: 13 }}><ShieldCheck size={15}/> Escaneo de demostración. No se envía ni publica información.</div></Modal>}
+    <div className="section-row"><h2 className="display">Identificación de emergencia</h2></div><section className="panel grid grid-2" style={{ alignItems: 'center' }}><div><div className="stat-icon" style={{ width: 42, height: 42, marginBottom: 13 }}><ScanLine size={20}/></div><h2 className="display">Una ayuda a un escaneo de distancia.</h2><p className="subtle">Al escanear el QR, se abre el marcador del teléfono de emergencia. La edad aparece en la tarjeta.</p><button className="btn secondary" onClick={() => setQrPet(state.pets[0] || null)} disabled={!state.pets.length} data-testid="button-scan-qr"><QrCode size={16}/> Ver tarjeta QR</button></div><div style={{ display: 'flex', justifyContent: 'center' }}>{state.pets[0] ? <PetQrCode pet={state.pets[0]} size={160}/> : <div className="qr-preview" aria-label="Añade una mascota para generar su código QR"/>}</div></section>
+    {showAdd && <Modal title="Nueva mascota" onClose={() => setShowAdd(false)}><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const name = String(f.get('name')).trim(); if (!name) return; const pet: Pet = { id: `p-${Date.now()}`, name, species: String(f.get('species')), breed: `${String(f.get('breed') || 'Sin raza indicada')} · ${String(f.get('age'))}`, age: String(f.get('age')), emergency: String(f.get('emergency')), status: 'home', x: 50, y: 50, color: ['peach', 'sage', 'lilac'][state.pets.length % 3] }; state.setPets(prev => [...prev, pet]); setShowAdd(false); state.notify(`${name} ya forma parte de PetPulse.`); }}><div className="form-grid"><Field label="Nombre"><input className="field" name="name" required placeholder="Ej. Chispa" data-testid="input-pet-name"/></Field><Field label="Especie"><select className="field" name="species" data-testid="select-pet-species"><option>Perro</option><option>Gato</option><option>Otro</option></select></Field><Field label="Raza"><input className="field" name="breed" placeholder="Ej. Mestiza" data-testid="input-pet-breed"/></Field><Field label="Edad"><input className="field" name="age" placeholder="Ej. 3 años" data-testid="input-pet-age"/></Field><Field label="Contacto de emergencia" full><input className="field" name="emergency" required placeholder="+57 300 000 0000 · Nombre" data-testid="input-emergency-contact"/></Field></div><div className="form-actions"><button type="button" className="btn ghost" onClick={() => setShowAdd(false)}>Cancelar</button><button className="btn" type="submit" data-testid="button-save-pet"><Plus size={15}/> Guardar perfil</button></div></form></Modal>}
+    {qrPet && <Modal title={`Tarjeta QR de ${qrPet.name}`} onClose={() => setQrPet(null)}><div className="qr-card"><div className="qr-card-top"><img src={petPhoto(qrPet)} alt={`Foto de ${qrPet.name}`} className="qr-pet-photo"/><div><span className="eyebrow">Identificación PetPulse</span><strong className="display qr-pet-name">{qrPet.name}</strong><span className="qr-pet-meta">{qrPet.species} · {qrPet.breed.split(' · ')[0]} · {qrPet.age || 'Edad no indicada'}</span></div></div><div className="qr-card-bottom"><div><div className="eyebrow">Teléfono de emergencia</div><strong>{qrPet.emergency || 'Contacto no indicado'}</strong></div><PetQrCode pet={qrPet} size={128}/></div><p className="subtle qr-caption">Al escanear, se abre el marcador con el número de emergencia.</p></div></Modal>}
   </main>;
 }
 
