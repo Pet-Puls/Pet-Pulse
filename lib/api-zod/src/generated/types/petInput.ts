@@ -32,4 +32,5 @@ export interface PetInput {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
 }

@@ -18,7 +18,7 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-router.use(requireAuth, requireRole("admin"));
+router.use("/admin", requireAuth, requireRole("admin"));
 
 router.get("/admin/overview", async (_req, res): Promise<void> => {
   const [accounts, pets, providers, pendingProviders] = await Promise.all([
