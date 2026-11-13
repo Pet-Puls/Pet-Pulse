@@ -18,6 +18,7 @@ import '@/index.css';
 
 const DemoApp = lazy(() => import('./DemoApp').then(module => ({ default: module.DemoApp })));
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
+const AppointmentsPage = lazy(() => import('@/pages/AppointmentsPage'));
 const DirectoryPage = lazy(() => import('@/pages/DirectoryPage'));
 const SignInPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignInPage })));
 const SignUpPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignUpPage })));
@@ -71,6 +72,7 @@ function RouterContent() {
         <Route path="/demo/*?" component={() => <DemoApp/>}/>
         <Route path="/pet/:token">{params => <PublicPetPage token={params.token}/>}</Route>
         <Route path="/onboarding" component={OnboardingPage}/>
+        <Route path="/workspace/appointments"><PrivateRoute>{me => <AppointmentsPage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace"><PrivateRoute>{me => <WorkspaceHomePage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace/map"><PrivateRoute>{() => <WorkspaceMapPage/>}</PrivateRoute></Route>
         <Route path="/workspace/pets"><PrivateRoute role="owner">{() => <PetsPage/>}</PrivateRoute></Route>

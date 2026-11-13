@@ -5,6 +5,8 @@
  * PetPulse API contract
  * OpenAPI spec version: 0.2.0
  */
+import type { ProviderAvailability } from './providerAvailability';
+import type { ProviderServicePublic } from './providerServicePublic';
 import type { PublicProviderProfileCategory } from './publicProviderProfileCategory';
 
 export interface PublicProviderProfile {
@@ -38,4 +40,6 @@ export interface PublicProviderProfile {
      * @pattern ^https:[/][/]
      */
   whatsappUrl: string | null;
+  services: ProviderServicePublic[];
+  availability: ProviderAvailability;
 }

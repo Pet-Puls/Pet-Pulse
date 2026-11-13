@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '@clerk/react';
 import { BadgeCheck, ExternalLink, MapPin, Search, Store } from 'lucide-react';
 import { Link } from 'wouter';
 import type { ListPublicProvidersCategory } from '@workspace/api-client-react';
@@ -7,8 +8,38 @@ import { Brand, ErrorPanel, LoadingPanel, errorMessage } from '@/components/app-
 import { getProviderCategoryLabel, providerCategories } from '@/features/providers';
 
 const pageSize = 12;
+const weekdayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+function formatCop(value: number | null) {
+  return value === null
+    ? 'Consultar precio'
+    : new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        maximumFractionDigits: 0,
+      }).format(value);
+}
+
+function dateInTimezone(timezone: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const value = (type: string) => parts.find(part => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+function formatLocalDate(date: string) {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'UTC',
+    dateStyle: 'medium',
+  }).format(new Date(`${date}T00:00:00.000Z`));
+}
 
 export default function DirectoryPage() {
+  const { isSignedIn } = useAuth();
   const [searchText, setSearchText] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ListPublicProvidersCategory | ''>('');
@@ -87,6 +118,51 @@ export default function DirectoryPage() {
                   <h2>{provider.name}</h2>
                   <p className="directory-neighborhood"><MapPin size={15}/>{provider.neighborhood}</p>
                   {provider.description && <p className="directory-description">{provider.description}</p>}
+                  <section className="directory-provider-resources" aria-label={`Servicios de ${provider.name}`}>
+                    <h3>Servicios</h3>
+                    {provider.services.length ? <ul className="directory-service-list">
+                      {provider.services.map(service => (
+                        <li key={service.id}>
+                          <span>
+                            <strong>{service.name}</strong>
+                            <small>{service.durationMinutes} min</small>
+                          </span>
+                          <span className="directory-service-price">{formatCop(service.priceCop)}</span>
+                        </li>
+                      ))}
+                    </ul> : <p className="directory-resource-empty">Servicios por confirmar.</p>}
+                  </section>
+                  <section className="directory-provider-resources" aria-label={`Disponibilidad de ${provider.name}`}>
+                    <h3>Disponibilidad</h3>
+                    {provider.availability.weeklyWindows.length ? (
+                      <ul className="directory-hours-list">
+                        {weekdayNames.map((day, dayOfWeek) => {
+                          const windows = provider.availability.weeklyWindows
+                            .filter(window => window.dayOfWeek === dayOfWeek)
+                            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+                          return windows.length ? (
+                            <li key={day}>
+                              <strong>{day}</strong>
+                              <span>{windows.map(window => `${window.startTime}–${window.endTime}`).join(', ')}</span>
+                            </li>
+                          ) : null;
+                        })}
+                      </ul>
+                    ) : <p className="directory-resource-empty">Horarios por confirmar.</p>}
+                    <p className="directory-timezone">Hora local: {provider.availability.timezone}</p>
+                    {provider.availability.exceptions
+                      .filter(exception => exception.date >= dateInTimezone(provider.availability.timezone))
+                      .sort((a, b) => a.date.localeCompare(b.date))
+                      .slice(0, 4)
+                      .map(exception => (
+                        <p className="directory-schedule-exception" key={exception.date}>
+                          <strong>{formatLocalDate(exception.date)}:</strong>{' '}
+                          {exception.isClosed
+                            ? 'Cerrado'
+                            : exception.windows.map(window => `${window.startTime}–${window.endTime}`).join(', ')}
+                        </p>
+                      ))}
+                  </section>
                   <div className="directory-provider-links" aria-label={`Enlaces de ${provider.name}`}>
                     {([
                       ['websiteUrl', 'Sitio web', provider.websiteUrl],
@@ -107,6 +183,14 @@ export default function DirectoryPage() {
                   >
                     Buscar en Google Maps <MapPin size={15}/>
                   </a>
+                  {provider.services.length > 0 && <Link
+                    className="account-button directory-booking-link"
+                    href={isSignedIn
+                      ? `/workspace/appointments?providerId=${encodeURIComponent(provider.id)}`
+                      : '/sign-in'}
+                  >
+                    {isSignedIn ? 'Solicitar cita' : 'Inicia sesión para solicitar cita'}
+                  </Link>}
                 </article>
               ))}
             </div>

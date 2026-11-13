@@ -125,6 +125,17 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .directory-card h2 { margin:0 0 9px; color:#285247; font:700 20px/1.2 var(--app-font-display); overflow-wrap:anywhere; }
 .directory-neighborhood { display:flex; align-items:center; gap:6px; margin:0 0 10px; color:#718078; font-size:12px; }
 .directory-description { flex:1; color:#65796e; font-size:13px; line-height:1.55; white-space:pre-line; }
+.directory-provider-resources { width:100%; margin-top:12px; padding-top:11px; border-top:1px solid #ece9df; }
+.directory-provider-resources h3 { margin:0 0 7px; color:#285247; font-size:12px; }
+.directory-service-list,.directory-hours-list { display:grid; gap:7px; margin:0; padding:0; list-style:none; }
+.directory-service-list li,.directory-hours-list li { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; color:#65796e; font-size:11px; }
+.directory-service-list li span:first-child { display:grid; gap:2px; }
+.directory-service-list strong,.directory-hours-list strong { color:#405f53; font-size:11px; }
+.directory-service-list small { color:#78867d; font-size:10px; }
+.directory-service-price { text-align:right; }
+.directory-resource-empty,.directory-timezone,.directory-schedule-exception { margin:5px 0 0; color:#78867d; font-size:10px; line-height:1.5; }
+.directory-hours-list li span { text-align:right; }
+.directory-schedule-exception strong { color:#597367; }
 .directory-provider-links { display:flex; flex-wrap:wrap; gap:7px 12px; margin:4px 0 14px; }
 .directory-provider-links a { display:inline-flex; align-items:center; gap:4px; color:#286354; font-size:11px; font-weight:700; text-decoration:none; }
 .directory-provider-links a:hover { text-decoration:underline; }
@@ -135,6 +146,39 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .directory-empty p { margin:0; color:#718078; font-size:13px; }
 .directory-pagination { display:flex; align-items:center; justify-content:center; gap:15px; margin-top:24px; color:#718078; font-size:12px; }
 .directory-pagination button { min-width:100px; }
+.provider-resources-grid { margin-top:16px; align-items:start; }
+.provider-resources-panel { min-width:0; }
+.provider-resources-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#286354; }
+.provider-resources-heading h2 { margin:5px 0 0; color:#285247; font-size:25px; }
+.provider-service-list { display:grid; gap:9px; margin:17px 0; }
+.provider-service-row { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:13px; border:1px solid #e8e5d9; border-radius:13px; background:#fffefa; }
+.provider-service-row.inactive { opacity:.72; }
+.provider-service-row h3,.provider-schedule-group h3 { margin:0; color:#285247; font-size:14px; }
+.provider-service-row p { margin:5px 0 0; color:#718078; font-size:12px; }
+.provider-service-description { white-space:pre-line; }
+.provider-service-status { display:inline-block; margin-top:6px; color:#855a35; font-size:10px; font-weight:700; }
+.provider-resource-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+.provider-resource-actions .account-button,.provider-schedule-group-heading .account-button,.provider-add-period { min-height:34px; padding:8px 10px; font-size:11px; }
+.provider-resource-actions .account-button { gap:5px; }
+.provider-resource-form { margin-top:18px; }
+.provider-resource-footnote { margin:12px 0 0; color:#78867d; font-size:11px; line-height:1.5; }
+.provider-availability-form { display:grid; gap:20px; margin-top:17px; }
+.provider-availability-form .account-field input { width:100%; border:1px solid #dfe3d8; border-radius:11px; background:#fffefa; padding:11px 12px; color:#284d44; font-size:13px; }
+.provider-schedule-group { display:grid; gap:10px; }
+.provider-schedule-group-heading,.provider-exception-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.provider-window-row { display:flex; align-items:center; gap:8px; }
+.provider-window-row select,.provider-window-row input,.provider-exception-row > input { min-width:0; border:1px solid #dfe3d8; border-radius:10px; background:#fffefa; padding:9px; color:#284d44; font-size:12px; }
+.provider-window-row select { flex:1 1 120px; }
+.provider-window-row input[type="time"] { flex:1 1 90px; }
+.provider-window-row span { color:#718078; font-size:11px; }
+.provider-exception-row { display:grid; gap:10px; padding:13px; border:1px solid #e8e5d9; border-radius:13px; background:#fffefa; }
+.provider-exception-heading label { color:#597367; font-size:11px; font-weight:700; }
+.provider-exception-row > input { width:100%; }
+.provider-closed-toggle { display:flex; align-items:center; gap:8px; color:#597367; font-size:12px; }
+.provider-closed-toggle input { accent-color:#286354; }
+.icon-button { display:grid; width:34px; height:34px; flex:0 0 34px; place-items:center; border:1px solid #dfe3d8; border-radius:10px; background:#fffefa; color:#597367; cursor:pointer; }
+.icon-button:hover { border-color:#aabdaf; color:#285247; }
+.provider-add-period { justify-self:start; }
 @media(max-width:800px) { .directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:560px) { .directory-page { padding:34px 18px 60px; }.directory-heading { margin-bottom:22px; }.directory-heading h1 { font-size:38px; }.directory-filters,.directory-grid { grid-template-columns:1fr; }.directory-card { padding:18px; }.directory-pagination { gap:8px; }.directory-pagination button { min-width:0; } }
 .account-layout { min-height:100dvh;background:#f4f2e9;display:grid;grid-template-columns:280px minmax(0,1fr);color:#274c43; }
@@ -212,6 +256,36 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .pet-contact-consent { grid-column:1/-1; display:flex; gap:10px; align-items:flex-start; border-radius:12px; background:#f4f3e9; padding:13px; color:#446457; font-size:12px; cursor:pointer; }
 .pet-contact-consent input { accent-color:#286354; margin-top:3px; }
 .pet-contact-consent span { display:grid; gap:4px; }
+.directory-booking-link { width:100%; margin-top:8px; }
+.account-panel > .account-button { margin-top:9px; }
+.appointment-page-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; align-items:start; }
+.appointment-page-grid > .appointment-preferences { grid-column:1/-1; }
+.appointment-section-title { margin:8px 0 17px; color:#285247; font-size:23px; }
+.account-form-hint { margin:0; color:#78877d; font-size:11px; line-height:1.55; }
+.account-field small { display:block; margin-top:6px; color:#78877d; font-size:10px; }
+.appointment-consent { display:flex; align-items:flex-start; gap:10px; padding:13px; border-radius:12px; background:#f4f3e9; color:#446457; font-size:12px; line-height:1.5; cursor:pointer; }
+.appointment-consent input { flex:none; margin:3px 0 0; accent-color:#286354; }
+.appointment-list { display:grid; gap:12px; }
+.appointment-card { min-width:0; padding:15px 0; border-top:1px solid #eeece2; }
+.appointment-card:first-child { border-top:0; padding-top:0; }
+.appointment-card-heading { display:flex; align-items:center; gap:11px; }
+.appointment-date-mark { width:38px; height:38px; flex:none; display:grid; place-items:center; border-radius:12px; background:#f6ead0; color:#52715e; }
+.appointment-card-title { min-width:0; flex:1; }
+.appointment-card-title h3 { margin:0; color:#305748; font-size:14px; }
+.appointment-card-title p { margin:4px 0 0; color:#7e8981; font-size:11px; }
+.appointment-status { flex:none; padding:6px 9px; border-radius:99px; background:#f5ebd5; color:#856321; font-size:10px; font-weight:800; }
+.appointment-status.confirmed { background:#e4efe2; color:#427453; }
+.appointment-status.declined,.appointment-status.cancelled { background:#f7e0dc; color:#a64b3e; }
+.appointment-status.reschedule_pending { background:#e7eaf4; color:#4e5e91; }
+.appointment-time,.appointment-details,.appointment-proposal { display:flex; align-items:center; gap:7px; margin:10px 0 0; color:#66796e; font-size:11px; line-height:1.5; }
+.appointment-time svg { flex:none; }
+.appointment-proposal { display:block; color:#8a6728; }
+.appointment-details { color:#89928a; }
+.appointment-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+.appointment-reschedule-form { display:flex; flex-wrap:wrap; align-items:flex-end; gap:9px; margin-top:12px; padding:12px; border-radius:12px; background:#f6f5ee; }
+.appointment-reschedule-form label { display:grid; gap:5px; color:#597367; font-size:10px; font-weight:700; }
+.appointment-reschedule-form input { min-width:130px; border:1px solid #dfe3d8; border-radius:8px; background:#fffefa; padding:8px; color:#284d44; }
+@media(max-width:800px){.appointment-page-grid{grid-template-columns:1fr}.appointment-page-grid>.appointment-preferences{grid-column:auto}}
 .pet-contact-consent small { color:#718078; line-height:1.45; }
 .pet-qr-dialog { text-align:center; }
 .pet-qr-dialog .modal-head { text-align:left; }

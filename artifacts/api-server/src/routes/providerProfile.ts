@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import {
   GetProviderProfileResponse,
@@ -7,7 +7,12 @@ import {
   SaveProviderProfileBody,
   SaveProviderProfileResponse,
 } from "@workspace/api-zod";
-import { db, providerProfilesTable } from "@workspace/db";
+import {
+  db,
+  providerAvailabilityTable,
+  providerProfilesTable,
+  providerServicesTable,
+} from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { isAllowedProviderLink } from "../lib/providerLinks";
 
@@ -60,12 +65,79 @@ router.get("/providers", async (req, res): Promise<void> => {
       .where(where),
   ]);
 
-  res.json(ListPublicProvidersResponse.parse({
-    items: profiles,
+  const providerIds = profiles.map((profile) => profile.id);
+  const [services, availabilities] = providerIds.length
+    ? await Promise.all([
+        db
+          .select()
+          .from(providerServicesTable)
+          .where(
+            and(
+              inArray(providerServicesTable.providerProfileId, providerIds),
+              eq(providerServicesTable.isActive, true),
+            ),
+          )
+          .orderBy(
+            asc(providerServicesTable.providerProfileId),
+            asc(providerServicesTable.name),
+          ),
+        db
+          .select()
+          .from(providerAvailabilityTable)
+          .where(inArray(providerAvailabilityTable.providerProfileId, providerIds)),
+      ])
+    : [[], []];
+  const servicesByProvider = new Map<string, typeof services>();
+  for (const service of services) {
+    const providerServices = servicesByProvider.get(service.providerProfileId) ?? [];
+    providerServices.push(service);
+    servicesByProvider.set(service.providerProfileId, providerServices);
+  }
+  const availabilityByProvider = new Map(
+    availabilities.map((availability) => [
+      availability.providerProfileId,
+      availability,
+    ]),
+  );
+  const items = profiles.map((profile) => {
+    const availability = availabilityByProvider.get(profile.id);
+    return {
+      ...profile,
+      services: (servicesByProvider.get(profile.id) ?? []).map(
+        ({ id, name, description, durationMinutes, priceCop }) => ({
+          id,
+          name,
+          description,
+          durationMinutes,
+          priceCop,
+        }),
+      ),
+      availability: {
+        timezone: availability?.timezone ?? "America/Bogota",
+        weeklyWindows: availability?.weeklyWindows ?? [],
+        exceptions: availability?.exceptions ?? [],
+      },
+    };
+  });
+  const response = ListPublicProvidersResponse.parse({
+    items,
     total: Number(totals[0]?.count ?? 0),
     page,
     pageSize,
-  }));
+  });
+  res.json({
+    ...response,
+    items: response.items.map((item) => ({
+      ...item,
+      availability: {
+        ...item.availability,
+        exceptions: item.availability.exceptions.map((exception) => ({
+          ...exception,
+          date: exception.date.toISOString().slice(0, 10),
+        })),
+      },
+    })),
+  });
 });
 
 router.use("/provider-profile", requireAuth);

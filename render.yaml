@@ -76,3 +76,9 @@ services:
         sync: false
       - key: SUPABASE_PET_PHOTOS_BUCKET
         value: pet-photos
+      - key: GMAIL_SMTP_USER
+        sync: false
+      - key: GMAIL_SMTP_APP_PASSWORD
+        sync: false
+      - key: GMAIL_FROM_NAME
+        value: Monka

@@ -1,16 +1,16 @@
 # Análisis de calidad, requisitos y roadmap de PetPulse
 
-**Fecha del análisis:** 7 de noviembre de 2026\
-**Base revisada:** rama local `thomas`, commit publicado `bbd201c` más cambios locales sin commit.\
+**Fecha del análisis:** 13 de noviembre de 2026\
+**Base revisada:** rama local `thomas`, commit publicado `7dfc5a6` más cambios locales sin commit.\
 **Alcance:** lectura del monorepo, configuración de workspace, documentación, rutas API y modelo de datos. Este documento es una evaluación de ingeniería; no es una auditoría de seguridad ni certifica un despliegue productivo.
 
 ## 1. Resumen ejecutivo
 
-PetPulse es un monorepo pnpm con una SPA, una API y librerías compartidas de contratos y persistencia. La base actual ya tiene autenticación Clerk, roles, perfiles, mascotas y proveedores con PostgreSQL; el mapa consulta servicios externos. La demostración (`/demo`) conserva datos simulados separados de los flujos conectados a la API.
+PetPulse es un monorepo pnpm con una SPA, una API y librerías compartidas de contratos y persistencia. La base actual ya tiene autenticación Clerk, roles, perfiles, mascotas y proveedores con PostgreSQL; el mapa consulta servicios externos. Servicios, disponibilidad y el primer flujo de citas están implementados localmente; la demostración (`/demo`) conserva datos simulados separados de los flujos conectados a la API.
 
-En los cambios locales de esta rama se añadieron fotos privadas y fichas QR revocables para mascotas, pero su migración y el bucket de Storage todavía requieren validación en staging. No se debe inferir que estas funciones están desplegadas por estar en el código local.
+Las fotos privadas y fichas QR revocables se probaron en staging con datos ficticios; el flujo firmado funcionó y el acceso público sin firma falló. El ajuste del bucket no se inspeccionó directamente en el panel de Supabase, y estas pruebas no certifican producción.
 
-La prioridad recomendada es asegurar que el proyecto se instale y compile de forma reproducible en Windows y Linux, ejecutar esa comprobación en GitHub Actions y validar la migración, autenticación, permisos, fotos y QR en un staging aislado. Después se deben construir pruebas automatizadas de comportamiento y ampliar funcionalidades. No se recomienda agregar tablas ni funciones de analítica predictiva antes de tener casos de uso y datos gobernados.
+La puerta de privacidad se probó en staging. Las migraciones `0003`–`0005` se aplicaron y verificaron allí el 13 de noviembre de 2026, después de validar un respaldo lógico del esquema `public`; no se aplicaron en producción. El código de servicios, disponibilidad, citas y avisos sigue local, por lo que su despliegue y validación funcional en staging siguen pendientes. No se recomienda agregar funciones de analítica predictiva antes de tener casos de uso y datos gobernados.
 
 ## 2. Estado actual y arquitectura
 
@@ -18,7 +18,7 @@ La prioridad recomendada es asegurar que el proyecto se instale y compile de for
 | ---------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | Web        | React, TypeScript, Vite, Wouter, cliente de API generado                 | Las rutas `/demo` siguen siendo demostrativas; autenticación real necesita las claves del entorno |
 | API        | Express, Clerk, validación Zod desde OpenAPI; smoke de rutas con Clerk/DB simulados | Integración real Clerk/DB/Storage y más permisos/rutas requieren pruebas adicionales       |
-| Datos      | PostgreSQL, Drizzle; perfiles de usuario, mascotas y proveedores         | Migraciones de fotos/QR y enlaces de proveedor requieren validación/aplicación en staging          |
+| Datos      | PostgreSQL, Drizzle; perfiles de usuario, mascotas, proveedores, servicios, disponibilidad, citas y outbox | `0003`–`0005` aplicadas y verificadas en staging; no en producción; falta desplegar código y validar flujos |
 | Archivos   | Integración de API con bucket privado de Supabase Storage para fotos     | El bucket y el flujo real deben verificarse en staging                                            |
 | Contratos  | OpenAPI como fuente y clientes/tipos generados                           | Se necesita una comprobación CI de que los artefactos generados estén sincronizados               |
 | Mapa       | Leaflet, teselas OpenStreetMap y lugares sugeridos mediante Photon; reporte de correcciones a OSM | Los lugares externos no están verificados por PetPulse; no hay pines de proveedores en el mapa |
@@ -28,14 +28,14 @@ La prioridad recomendada es asegurar que el proyecto se instale y compile de for
 ### Capacidades reales frente a demostración
 
 - **Base de aplicación:** cuenta, roles, perfiles de mascota y proveedor; revisión administrativa de proveedores.
-- **Trabajo local pendiente de publicar:** edición y foto privada de mascota, QR público limitado, consentimiento de contacto y revocación.
-- **Directorio público:** consulta perfiles aprobados desde la API, con búsqueda, filtro, paginación y enlaces HTTPS opcionales; requiere API y base de datos disponibles.
-- **Demostración, no operación real:** citas, alertas comunitarias de pérdida, métricas administrativas simuladas y movimiento de mascotas.
+- **Mascotas:** edición, foto privada, QR limitado, consentimiento y revocación están implementados y se probaron en staging con datos ficticios; falta confirmar directamente el ajuste de privacidad del bucket en Supabase.
+- **Directorio público:** consulta perfiles aprobados, servicios activos y disponibilidad desde la API, con búsqueda, filtro, paginación y enlaces HTTPS opcionales; requiere API y base de datos disponibles.
+- **Demostración, no operación real:** alertas comunitarias de pérdida, métricas administrativas simuladas y movimiento de mascotas. Las citas ya usan API y persistencia local; falta desplegar el código y validar los flujos en staging.
 - **Mapa:** muestra sugerencias externas de OpenStreetMap/Photon, señaladas como no verificadas y con enlace para reportar correcciones a OSM. Aún no representa ubicaciones de proveedores verificadas por PetPulse. La ubicación del navegador corresponde a la persona usuaria y no rastrea a una mascota.
 
-Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opcionales. Se exige HTTPS y se valida que los enlaces sociales correspondan al dominio de su red. Los cambios al perfil regresan al estado pendiente de revisión; el directorio público solo lista perfiles aprobados. La migración `0002_provider_social_links.sql` está creada, pero no se ha aplicado en ningún entorno.
+Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opcionales. Se exige HTTPS y se valida que los enlaces sociales correspondan al dominio de su red. Los cambios al perfil regresan al estado pendiente de revisión; el directorio público solo lista perfiles aprobados. La migración `0002_provider_social_links.sql` se aplicó en staging. Servicios y disponibilidad permiten configuración aunque el proveedor esté pendiente, pero solo se publican para perfiles aprobados.
 
-El esquema actual de tres tablas es adecuado para el alcance conectado que existe. Las entidades para citas, servicios, reportes de pérdida e historial de salud deben diseñarse al implementar esos flujos, no anticipadamente.
+El esquema local ya incluye catálogo de servicios, disponibilidad semanal/excepciones, citas, preferencias de WhatsApp y outbox. Las migraciones `0003_provider_services_and_availability.sql`, `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` se aplicaron y verificaron en staging el 13 de noviembre de 2026; no se han aplicado en producción. WhatsApp conserva avisos diferidos sin enviarlos hasta integrar un proveedor; el correo usa Gmail SMTP cuando se configuran sus secretos.
 
 ## 3. Hallazgos de ingeniería y acciones
 
@@ -45,9 +45,9 @@ El esquema actual de tres tablas es adecuado para el alcance conectado que exist
 | P0, corregido localmente | El build de `mockup-sandbox` exigía `PORT` y `BASE_PATH` aunque no se proporcionaran.                                                | El build general fallaba en un checkout sin variables específicas de Replit.                  | Se añadieron valores predeterminados seguros para desarrollo/build y se conserva la validación del puerto explícito. |
 | P0, nuevo                | No existía un workflow CI.                                                                                                           | Los cambios podían mezclarse sin comprobar instalación, tipos o compilación.                  | Se añade `.github/workflows/ci.yml`; su ejecución remota empieza al publicar la rama o crear un PR.                  |
 | P1                       | La cobertura automatizada aún no alcanza todas las rutas, operaciones QR/foto ni recorridos de navegador.                           | El smoke HTTP usa Clerk y consultas de datos simulados; no valida servicios reales, Storage ni todos los controles de acceso. | Ampliar por etapas con pruebas de rutas, integración aislada y E2E; no reportar el build como sustituto.           |
-| P1                       | Drizzle no tiene un snapshot inicial disponible y la migración nueva se escribió manualmente.                                        | La generación y revisión de futuras migraciones no es todavía reproducible de punta a punta.  | Establecer una línea base de migraciones y ensayar migración desde base vacía y desde versión existente.             |
+| P1                       | Faltan snapshots de Drizzle para las migraciones 0001 y 0002.                                                                          | La generación de 0003 repitió columnas anteriores y requirió retirar del SQL los cambios ya migrados. | Establecer una línea base y ensayar migración desde base vacía y desde una versión existente.                   |
 | P1                       | El entorno real requiere credenciales y servicios externos, que no están disponibles en CI.                                          | No se han verificado Clerk, Supabase Storage ni aislamiento de staging de extremo a extremo.  | Mantener CI sin secretos y hacer pruebas de integración solo en staging aislado.                                     |
-| P2                       | Las vistas de directorio, citas, alertas y panel contienen comportamiento de demostración.                                           | La interfaz puede sugerir capacidades que aún no son operativas.                              | Etiquetar claramente demos y definir alcance/criterios antes de conectar persistencia.                               |
+| P2                       | Alertas comunitarias y métricas administrativas siguen siendo demostrativas; servicios y citas aún no se validan en staging.            | Algunas vistas continúan fuera de los flujos persistentes o del entorno de prueba.             | Mantener separada la demo y validar servicios/citas en staging antes de promocionarlos como operativos.               |
 | P2                       | El mapa depende de servicios públicos de teselas/geocodificación/lugares.                                                            | Disponibilidad, límites y condiciones de uso pueden impedir una operación confiable a escala. | Revisar políticas, límites y proveedor antes de lanzamiento con tráfico relevante.                                   |
 | P3                       | No existe todavía un caso de uso de ciencia de datos/ML implementado.                                                                | Métricas simuladas no equivalen a analítica real ni justifican entrenamiento de modelos.      | Priorizar calidad, consentimiento y métricas agregadas; evaluar ML solo con una necesidad demostrada.                |
 
@@ -88,6 +88,7 @@ No necesita secretos, no publica artefactos y tiene permiso de solo lectura al r
 | TC-09 | Ubicación del navegador denegada, dirección manual y proveedor de lugares no disponible | La búsqueda manual funciona; no se finge GPS de mascota y se informa el fallo externo                            | P1        |
 | TC-10 | Navegación con teclado y pantalla móvil                                                 | Foco visible, etiquetas, errores comprensibles y controles utilizables                                           | P1        |
 | TC-11 | `pnpm install --frozen-lockfile` y build en Windows/Linux                               | Ambas plataformas instalan dependencias y compilan con lockfile sin cambios                                      | P0        |
+| TC-12 | Solicitud concurrente, propuesta/aceptación de cambio, cancelación y avisos de cita     | Una sola reserva por intervalo; solo participantes ejecutan transiciones permitidas; email queda trazable y WhatsApp no se envía sin integración | P0 |
 
 No ejecutar TC-07 ni otras pruebas destructivas contra producción. Usar bases de datos efímeras o staging aislado.
 
@@ -95,13 +96,13 @@ No ejecutar TC-07 ni otras pruebas destructivas contra producción. Usar bases d
 
 - Se añadieron **3 pruebas unitarias** del cliente del directorio y se ejecutaron con `pnpm run test`: serialización de filtros, omisión del token en consultas públicas, rechazo de respuestas inválidas y propagación de errores HTTP. El flujo CI ahora las ejecuta antes del build.
 - Se añadieron **7 pruebas HTTP de API** con dobles de prueba: ausencia de sesión, onboarding incompleto, rol incorrecto, acceso owner permitido, listado limitado a las mascotas del tutor, y promoción a admin solo con correo configurado y verificado (incluida denegación si no está verificado).
-- La suite del API ahora suma **15 pruebas** con datos/servicios simulados: incluye 3 pruebas HTTP adicionales para confirmar que editar un proveedor reinicia la aprobación, que se rechazan enlaces de redes incompatibles y que el directorio solo publica perfiles aprobados. Esto cubre regresiones locales, pero no sustituye la integración real con Clerk, PostgreSQL ni Storage.
+- La suite del API suma **19 pruebas** con dobles de prueba: incluye permisos y propiedad para servicios, rechazo de horarios superpuestos, persistencia de varios tramos y excepciones, y publicación de servicios/horarios solo para perfiles aprobados. Esto cubre regresiones locales, pero no sustituye la integración real con Clerk, PostgreSQL ni Storage.
 - En el preview de producción local, la búsqueda del directorio consultó el endpoint mediante respuestas de API simuladas. El resultado filtrado apareció en **314 ms** desde que se ingresó el término; esto verifica el debounce y el renderizado de la interfaz, no la latencia real de API, base de datos o red.
 - También se comprobó el estado sin resultados, el filtro por categoría, la paginación (13 elementos, 12 por página) y la recuperación tras dos respuestas `503`: se mostró el error con la acción **Reintentar** y la tercera solicitud simulada cargó el resultado.
 - En una pantalla de **390 × 844**, la ficha pública mostró el estado perdido cuando correspondía, ocultó el contacto si no se había autorizado/proporcionado y mostró el contacto cuando la respuesta lo incluía. No se observó desbordamiento horizontal.
 - Estas pruebas no validan autenticación real, permisos, persistencia, Storage ni revocación del QR. Clerk no pudo cargar sin la configuración de entorno; esos flujos siguen requiriendo staging aislado.
 - La medición es una comprobación manual de laboratorio, no Core Web Vitals de usuarios reales. No hay RUM ni evidencia de rendimiento en producción.
-- La guía de despliegue incluye ahora una puerta de salida de staging con pasos de migración, aislamiento de fotos, roles, QR, proveedores, observabilidad y restauración. Ningún paso remoto se ejecutó: falta confirmar y disponer del entorno staging aislado.
+- La guía de despliegue incluye una puerta de salida de staging con pasos de migración, aislamiento de fotos, roles, QR, proveedores, observabilidad y restauración. El respaldo lógico de `public` y las migraciones `0003`–`0005` ya se verificaron en el entorno aislado; el código aún no se despliega y falta validar los flujos y el bucket.
 
 ## 6. Requisitos funcionales (RF)
 
@@ -112,15 +113,15 @@ El documento maestro contiene una especificación de producto más amplia. Esta 
 | RF-01 | Autenticar cuentas mediante Clerk y asociar un perfil interno            | Base implementada; verificar inicio de sesión con entorno configurado |
 | RF-02 | Aplicar roles y propiedad de datos en el servidor                        | Implementado en rutas existentes; falta suite de pruebas sistemática  |
 | RF-03 | Crear, listar y editar perfiles de mascota                               | API implementada                                                      |
-| RF-04 | Cargar foto privada con formatos y límite definidos                      | Código local; requiere migración y Storage de staging                 |
-| RF-05 | Generar/revocar QR limitado y compartir contacto solo con consentimiento | Código local; requiere migración y pruebas de privacidad              |
-| RF-06 | Crear perfil de proveedor, incluir enlaces HTTPS opcionales y permitir revisión administrativa | Perfil y revisión implementados; migración de enlaces pendiente de aplicar |
+| RF-04 | Cargar foto privada con formatos y límite definidos                      | Implementado; flujo probado en staging con datos ficticios; verificar el ajuste del bucket en Supabase |
+| RF-05 | Generar/revocar QR limitado y compartir contacto solo con consentimiento | Implementado y probado en staging con datos ficticios; sin certificación de producción |
+| RF-06 | Crear perfil de proveedor, incluir enlaces HTTPS opcionales y permitir revisión administrativa | Implementado y probado; migración de enlaces aplicada en staging |
 | RF-07 | Consultar lugares cercanos y zona en el mapa                             | Implementado con datos externos claramente indicados como no verificados; permite reportar en OSM |
-| RF-08 | Gestionar servicios y disponibilidad de proveedor                        | Pendiente                                                             |
-| RF-09 | Solicitar y gestionar citas con prevención de dobles reservas            | Pendiente                                                             |
+| RF-08 | Gestionar servicios y disponibilidad de proveedor                        | Código API/UI local; migración aplicada en staging; falta desplegar y validar el flujo |
+| RF-09 | Solicitar y gestionar citas con prevención de dobles reservas            | Implementado localmente; migración aplicada en staging; falta desplegar y validar el flujo |
 | RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Pendiente; requiere diseño de privacidad                              |
 | RF-11 | Registrar historial de salud y recordatorios                             | Pendiente; no debe interpretarse como diagnóstico                     |
-| RF-12 | Gestionar notificaciones, preferencias y estado de entrega               | Pendiente                                                             |
+| RF-12 | Gestionar notificaciones, preferencias y estado de entrega               | Email Gmail con reintentos, preferencia WhatsApp y outbox diferida implementados localmente; falta configurar Gmail y validar staging |
 | RF-13 | Eliminar/exportar cuenta y aplicar retención definida                    | Pendiente                                                             |
 | RF-14 | Mostrar analítica administrativa calculada de datos reales y agregados   | Pendiente; las métricas actuales de demo no son analítica operativa   |
 
@@ -179,15 +180,15 @@ Los siguientes issues son propuestas para crear en GitHub cuando haya acceso. **
 
 ### P2 — Funcionalidades centrales aún simuladas
 
-**ISSUE-10 — Implementar catálogo de servicios y disponibilidad de proveedores**\
+**ISSUE-10 — Validar en staging catálogo de servicios y disponibilidad de proveedores**\
 **HU:** Como proveedor aprobado, quiero publicar servicios, horarios y excepciones para recibir solicitudes válidas.\
 **RF/RNF:** RF-08; RNF-03 propiedad por proveedor.\
-**Criterios:** CRUD autorizado; horarios y zona horaria definidos; perfiles pendientes/suspendidos no se presentan como disponibles.
+**Criterios:** migración probada; CRUD autorizado; tramos no superpuestos y excepciones validadas; servicios/horarios solo visibles para perfiles aprobados.
 
 **ISSUE-11 — Implementar flujo de citas sin dobles reservas**\
 **HU:** Como tutor, quiero solicitar una cita para mi mascota; como proveedor, quiero confirmarla o proponer otro horario.\
 **RF/RNF:** RF-09, RF-12; RNF-04 consistencia y RNF-07 notificación.\
-**Criterios:** estados acordados, validación transaccional de disponibilidad, cancelación y auditoría de cambios.
+**Criterios:** solicitudes pendientes, confirmación/rechazo, cancelación antes del inicio, propuestas de cambio con aceptación/rechazo, validación por zona horaria, bloqueo transaccional contra dobles reservas y avisos en outbox. Implementado localmente; migraciones aplicadas en staging; falta desplegar y validar roles/flujo.
 
 **ISSUE-12 — Implementar reportes de mascota perdida con divulgación temporal**\
 **HU:** Como tutor, quiero avisar que mi mascota se perdió y controlar qué ubicación y contacto compartir.\
@@ -202,7 +203,7 @@ Los siguientes issues son propuestas para crear en GitHub cuando haya acceso. **
 **ISSUE-14 — Integrar notificaciones y preferencias de comunicación**\
 **HU:** Como usuario, quiero enterarme de cambios importantes por canales que autoricé.\
 **RF/RNF:** RF-12; RNF-07 entrega y privacidad.\
-**Criterios:** preferencias y consentimiento; deduplicación/reintento; estado de entrega cuando el canal lo permita; contenido sensible minimizado.
+**Criterios:** correo al email verificado mediante Gmail SMTP con reintentos y estado persistido; número separado y consentimiento explícito para WhatsApp, con avisos diferidos y cancelables hasta integrar un proveedor. Las credenciales Gmail se configuran como secretos del entorno y nunca en el código. Implementado localmente; falta configurar/verificar el entorno de staging.
 
 ### P3 — Operación y ciencia de datos responsable
 
@@ -244,8 +245,8 @@ No usar salud, ubicación precisa, contactos o datos identificables para analít
 
 ## 10. Orden de ejecución recomendado
 
-1. Publicar estos cambios en una rama con permiso y hacer que el workflow CI pase en Windows y Linux.
-2. Confirmar que Render/Supabase/Clerk corresponden a staging; aplicar las migraciones solo allí tras revisar backup y estado de esquema; crear/verificar bucket privado y completar la puerta de salida de staging descrita en la guía de despliegue.
+1. Revisar el worktree y separar cambios ajenos; publicar solo los cambios aprobados en una rama de staging y hacer que CI pase en Windows y Linux.
+2. Configurar los secretos de Gmail solo en Render staging; desplegar API/web y verificar el bucket privado, sin tocar producción.
 3. Ejecutar TC-01 a TC-08 con identidad y datos de prueba; corregir regresiones.
 4. Añadir pruebas automatizadas API y E2E y exigirlas para integrar a `desarrollo`.
 5. Implementar los flujos de negocio P2 por etapas y ampliar el modelo solo cuando el flujo esté definido.

@@ -19,7 +19,7 @@ La solución se dirige a tres grupos:
 2. **Asociados o proveedores**, como veterinarias, paseadores, guarderías, refugios y tiendas.
 3. **Administradores**, que supervisan la operación, los perfiles y las alertas de la plataforma.
 
-PetPulse conserva una demostración interactiva con datos simulados y también incluye cuentas, roles y persistencia en servidor para perfiles de mascotas y proveedores. Los perfiles reales permiten editar sus datos y cargar fotos privadas; sus QR públicos muestran una ficha limitada, son revocables y solo comparten el contacto de emergencia con consentimiento expreso. La demostración sigue guardando cambios en el navegador y está aislada de las cuentas reales. La ubicación GPS, las notificaciones externas, el directorio real, las citas de producción y varios controles operativos siguen siendo trabajo pendiente. Este documento distingue la base ya implementada de las capacidades todavía previstas.
+PetPulse conserva una demostración interactiva con datos simulados y también incluye cuentas, roles y persistencia en servidor para perfiles de mascotas y proveedores. Los perfiles reales permiten editar sus datos y cargar fotos privadas; sus QR públicos muestran una ficha limitada, son revocables y solo comparten el contacto de emergencia con consentimiento expreso. El directorio, los servicios y la disponibilidad de proveedores, y una primera versión persistente de citas ya están conectados localmente. Las migraciones `0003`–`0005` se aplicaron y verificaron en staging, pero no en producción; el código correspondiente aún no se ha desplegado ni validado allí. El envío por Gmail requiere configurar secretos y WhatsApp permanece diferido hasta integrar un proveedor. La demostración sigue aislada de las cuentas reales. Este documento distingue la base ya implementada de las capacidades todavía previstas.
 
 ## 2. Intención del proyecto
 
@@ -141,7 +141,7 @@ Las rutas actuales son rutas del prototipo, no una decisión definitiva de naveg
 |---|---|---|
 | `/` Inicio | Resumen para el rol seleccionado y accesos a tareas frecuentes | Prototipo disponible |
 | `/map` Mapa | Explorar lugares cercanos y buscar otra zona | Mapa externo integrado; ubicación del usuario solo bajo permiso, sin GPS de mascotas |
-| `/workspace/pets` Mascotas | Ver, añadir y editar perfiles, cargar fotos y gestionar su QR público revocable | Integrado con API; requiere configurar Supabase Storage y aplicar migraciones |
+| `/workspace/pets` Mascotas | Ver, añadir y editar perfiles, cargar fotos y gestionar su QR público revocable | Integrado con API; revisar el bucket en staging y aplicar las migraciones en producción |
 | `/directory` Directorio | Buscar y filtrar proveedores por categoría, zona y servicio | Prototipo disponible; proveedores ficticios |
 | `/services` Servicios | Ver citas y agregar un servicio desde la vista de proveedor | Prototipo disponible; sin sincronización ni confirmación real |
 | `/admin` Operaciones | Ver métricas de muestra y resolver alertas simuladas | Prototipo disponible; sin control administrativo real |
@@ -337,13 +337,13 @@ No almacenar fotos o documentos en columnas de texto/base64 si existe almacenami
 
 PetPulse ya usa Express 5, contratos OpenAPI con cliente/hooks generados, PostgreSQL con Drizzle y Clerk para autenticación. La API protege el perfil de cuenta, la configuración inicial, las mascotas, el perfil comercial y la administración de proveedores. La autoridad de roles y propiedad de datos está en el servidor; la lista de administradores se configura con correos verificados. El estado del proveedor se mantiene pendiente hasta una decisión administrativa.
 
-La web mantiene rutas separadas para la experiencia de cuenta y para la demostración local. El mapa de cuenta inicia centrado en Medellín, Antioquia, y consulta con Photon lugares cercanos catalogados en OpenStreetMap, como veterinarias, tiendas para mascotas, parques, espacios culturales y de eventos, restaurantes y cafés. Permite consultar la ubicación del dispositivo solo tras una acción y permiso explícitos, o buscar una dirección manualmente. Esa ubicación no se guarda en PetPulse ni representa la posición de una mascota. Los espacios culturales/de eventos son lugares, no una agenda de eventos actuales. La demostración sigue usando sus propios datos simulados; no incluye GPS de mascotas, notificaciones externas, un directorio conectado a perfiles comerciales de PetPulse ni reservas de producción.
+La web mantiene rutas separadas para la experiencia de cuenta y para la demostración local. El mapa de cuenta inicia centrado en Medellín, Antioquia, y consulta con Photon lugares cercanos catalogados en OpenStreetMap, como veterinarias, tiendas para mascotas, parques, espacios culturales y de eventos, restaurantes y cafés. Permite consultar la ubicación del dispositivo solo tras una acción y permiso explícitos, o buscar una dirección manualmente. Esa ubicación no se guarda en PetPulse ni representa la posición de una mascota. Los espacios culturales/de eventos son lugares, no una agenda de eventos actuales. La demostración sigue usando sus propios datos simulados; no incluye GPS de mascotas ni reemplaza el directorio real. Las citas de cuenta permiten solicitar, confirmar, rechazar, cancelar y proponer cambios de horario; aún falta validarlas en staging. El email depende de la configuración segura de Gmail SMTP y WhatsApp no se envía hasta integrar un proveedor.
 
 La primera versión del mapa usa teselas de OpenStreetMap y Photon para geocodificación y búsqueda cercana filtrada por categorías de OpenStreetMap. Las coordenadas consultadas se envían a Photon; la ubicación no se persiste en PetPulse. Los servicios son públicos y no ofrecen una garantía de disponibilidad adecuada para producción; antes de un lanzamiento con tráfico relevante se deben revisar sus políticas y límites y, si el uso lo requiere, contratar o desplegar servicios con capacidad y nivel de disponibilidad adecuados.
 
-Los perfiles reales de mascota admiten fotos mediante un bucket privado de Supabase Storage. Cada persona tutora puede crear o revocar un QR que abre `/pet/{token}`; esa ficha no publica edad, dirección ni datos de cuenta, y el contacto de emergencia permanece oculto salvo consentimiento expreso. La clave `service_role` solo se configura en Render. Las migraciones nuevas y el bucket deben aplicarse en cada entorno antes de habilitar estas funciones.
+Los perfiles reales de mascota admiten fotos mediante un bucket privado de Supabase Storage. Cada persona tutora puede crear o revocar un QR que abre `/pet/{token}`; esa ficha no publica edad, dirección ni datos de cuenta, y el contacto de emergencia permanece oculto salvo consentimiento expreso. La clave `service_role` solo se configura en Render. Las migraciones están aplicadas en staging; aún falta verificar allí la privacidad del bucket y aplicar/configurar cada entorno productivo por separado.
 
-Para recrear el despliegue en servicios externos se añadieron configuraciones separadas: Vercel para la interfaz, Render para la API, Supabase para PostgreSQL y Storage, y Clerk externo para las cuentas. El Blueprint ya declara un servicio staging separado, pero debe conectarse a un proyecto Supabase y a una instancia Clerk de desarrollo independientes. La guía paso a paso está en `docs/deployment/CONFIGURACION-PLATAFORMAS.md`.
+Para recrear el despliegue en servicios externos se añadieron configuraciones separadas: Vercel para la interfaz, Render para la API, Supabase para PostgreSQL y Storage, y Clerk externo para las cuentas. El servicio de API staging y el proyecto Supabase de staging existen; antes de validar los flujos falta publicar el código, confirmar las variables de conexión/Clerk y configurar los secretos de Gmail. La guía paso a paso está en `docs/deployment/CONFIGURACION-PLATAFORMAS.md`.
 
 ### 12.3 Arquitectura objetivo para las etapas restantes
 
@@ -368,7 +368,7 @@ Estas etapas quedan como guía de avance y preservan el alcance solicitado:
 - Implementado inicialmente: edición de perfiles de mascota, fotografía privada y QR público limitado, con consentimiento para mostrar contacto de emergencia y revocación del QR.
 - Implementado: validación de identidad, control de permisos y propiedad de datos en el servidor; revisión administrativa de proveedores.
 - Implementado: migración inicial reproducible y configuración para separar Vercel, Render y Supabase; el despliegue externo usa una instancia Clerk independiente.
-- Preparado: servicio de API staging en Render y separación documentada de base de datos, instancia Clerk y variables de Preview. Falta crear los recursos en las consolas y configurar sus secretos.
+- Preparado: servicio de API staging en Render y proyecto Supabase de staging; las migraciones `0003`–`0005` están aplicadas. Falta publicar el código, verificar Clerk/Storage y configurar Gmail en staging.
 - Pendiente: completar políticas de retención y eliminación de cuenta, procedimientos de respaldo/restauración, migración de cuentas entre instancias Clerk y pruebas de recuperación/operación antes de producción.
 
 ### Etapa B — Ubicación real con controles de privacidad
@@ -427,4 +427,4 @@ Estas etapas quedan como guía de avance y preservan el alcance solicitado:
 
 ---
 
-**Estado actual, en una frase:** PetPulse conserva la demo y ya cuenta con una primera etapa real de cuentas, roles, API, perfiles persistentes y despliegue portátil; siguen pendientes el directorio y las citas reales, las funciones operativas y la ubicación con privacidad.
+**Estado actual, en una frase:** PetPulse conserva la demo y ya cuenta con cuentas, roles, perfiles persistentes, directorio y una primera etapa local de agenda; faltan validar las migraciones y citas en staging, configurar Gmail, completar WhatsApp y desarrollar las funciones operativas y de ubicación con privacidad.

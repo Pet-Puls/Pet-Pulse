@@ -57,16 +57,25 @@ final.
 
 5. El repositorio incluye la migración `0001_pet_photos_and_qr.sql`, que añade
    rutas de fotos, tokens revocables de QR y el consentimiento para compartir
-   contactos. Aplicar las migraciones a staging antes de desplegar la API.
-6. En **Storage**, crear el bucket privado `pet-photos` y configurar un límite
+   contactos. Las migraciones `0000`–`0002` están registradas en staging.
+6. Las migraciones locales `0003_provider_services_and_availability.sql`,
+   `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` agregan servicios,
+   disponibilidad, citas, outbox y preferencias de WhatsApp. Se aplicaron y
+   verificaron en staging el 13 de noviembre de 2026 tras validar un respaldo
+   lógico del esquema `public`. No se han aplicado en producción. La API/web con
+   estos cambios aún no se han desplegado ni se han validado sus flujos en staging.
+   No usar credenciales de producción para estas pruebas.
+7. En **Storage**, crear el bucket privado `pet-photos` y configurar un límite
    de archivo de 5 MB y tipos permitidos `image/jpeg`, `image/png` e
    `image/webp`. No habilitar acceso público: la API valida la propiedad,
    sube los archivos y genera enlaces firmados de corta duración.
-7. Copiar `SUPABASE_URL` y la clave `service_role` del proyecto. La clave
+8. Copiar `SUPABASE_URL` y la clave `service_role` del proyecto. La clave
    `service_role` es secreta, omite las políticas RLS y solo se configura en
    Render; nunca en Vercel ni en el navegador.
-8. Verificar en Table Editor que existen `petpulse_user_profiles`,
-   `petpulse_pets` y `petpulse_provider_profiles`.
+9. Verificar en Table Editor que existen `petpulse_user_profiles`,
+   `petpulse_pets`, `petpulse_provider_profiles`, `petpulse_provider_services`,
+   `petpulse_provider_availability`, `petpulse_appointments` y
+   `petpulse_appointment_notifications`.
 
 Notas:
 - Las contraseñas con caracteres especiales (`@`, `#`, `%`, `/`) deben
@@ -99,6 +108,15 @@ Crear un **Blueprint** desde el repositorio de GitHub. Render leerá
 | `SUPABASE_URL` | URL del proyecto Supabase del mismo entorno | No |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave `service_role` del mismo proyecto | Sí |
 | `SUPABASE_PET_PHOTOS_BUCKET` | `pet-photos` | No |
+| `GMAIL_SMTP_USER` | Cuenta Gmail que enviará los avisos | Sí |
+| `GMAIL_SMTP_APP_PASSWORD` | Contraseña de aplicación de esa cuenta Gmail | Sí |
+| `GMAIL_FROM_NAME` | Nombre visible, por ejemplo `Monka` | No |
+
+El envío de email usa Gmail SMTP solo cuando ambas variables secretas están
+configuradas; sin ellas, los avisos quedan en la outbox. WhatsApp no se envía:
+los avisos con teléfono y consentimiento explícito permanecen diferidos hasta
+integrar un proveedor. No colocar contraseñas de aplicación en el repositorio ni
+en el navegador.
 
 Ya están fijadas en el manifiesto: `NODE_ENV=production`, `NODE_VERSION=22`,
 `CLERK_AUTH_MODE=external`, `DATABASE_SSL=true` y `DATABASE_POOL_MAX=5`.
@@ -141,7 +159,8 @@ a `/api` a `index.html`.
 1. En Render, poner en `ALLOWED_WEB_ORIGINS` el dominio de Vercel y redesplegar.
 2. En Clerk, añadir ese dominio a los dominios permitidos.
 3. Probar registro, onboarding, roles, edición y foto de mascota, QR público
-   con contacto desactivado y activado, revocación del QR y administración.
+   con contacto desactivado y activado, revocación del QR, administración,
+   directorio y flujo de citas con solicitudes simultáneas.
 
 ## Límites de los planes gratuitos
 

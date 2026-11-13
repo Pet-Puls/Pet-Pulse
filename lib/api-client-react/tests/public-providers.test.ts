@@ -16,6 +16,22 @@ const providerPage = {
     instagramUrl: null,
     facebookUrl: null,
     whatsappUrl: null,
+    services: [{
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      name: "Consulta",
+      description: null,
+      durationMinutes: 45,
+      priceCop: null,
+    }],
+    availability: {
+      timezone: "America/Bogota",
+      weeklyWindows: [],
+      exceptions: [{
+        date: "2026-06-15",
+        isClosed: true,
+        windows: [],
+      }],
+    },
   }],
   total: 1,
   page: 2,

@@ -43,7 +43,19 @@ export async function listPublicProvidersValidated(
       "No pudimos mostrar el directorio por una respuesta inesperada. Intenta de nuevo.",
     );
   }
-  return parsed.data;
+  return {
+    ...parsed.data,
+    items: parsed.data.items.map(provider => ({
+      ...provider,
+      availability: {
+        ...provider.availability,
+        exceptions: provider.availability.exceptions.map(exception => ({
+          ...exception,
+          date: exception.date.toISOString().slice(0, 10),
+        })),
+      },
+    })),
+  };
 }
 
 export function useListPublicProvidersValidated(search: PublicProviderSearch) {

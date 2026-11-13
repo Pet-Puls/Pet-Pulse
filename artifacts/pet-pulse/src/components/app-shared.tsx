@@ -4,7 +4,7 @@ import {
 } from '@workspace/api-client-react';
 import type { MeProfile } from '@workspace/api-client-react';
 import {
-  ChevronRight, Home, LogOut, MapPin, PawPrint, RefreshCw, ShieldCheck, Store,
+  CalendarClock, ChevronRight, Home, LogOut, MapPin, PawPrint, RefreshCw, ShieldCheck, Store,
 } from 'lucide-react';
 import { Link, Redirect, useLocation } from 'wouter';
 import type { ReactNode } from 'react';
@@ -42,6 +42,7 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
     { href: '/workspace', label: 'Resumen', icon: Home },
     { href: '/workspace/map', label: 'Mapa', icon: MapPin },
     { href: '/directory', label: 'Directorio', icon: Store },
+    ...(['owner', 'provider'].includes(me.role) ? [{ href: '/workspace/appointments', label: 'Citas', icon: CalendarClock }] : []),
     ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mascotas', icon: PawPrint }] : []),
     ...(me.role === 'provider' ? [{ href: '/workspace/provider', label: 'Mi perfil', icon: Store }] : []),
     ...(me.role === 'admin' ? [{ href: '/workspace/admin', label: 'Admin', icon: ShieldCheck }] : []),

@@ -7,6 +7,7 @@ import {
 import type { ProviderProfileInput } from '@workspace/api-client-react';
 import { ErrorPanel, LoadingPanel, PageHeading, errorMessage } from '@/components/app-shared';
 import { providerCategories } from '@/features/providers';
+import { ProviderAvailabilityPanel, ProviderServicesPanel } from './ProviderResourcesPanels';
 
 export default function ProviderPage() {
   const client = useQueryClient();
@@ -76,6 +77,10 @@ export default function ProviderPage() {
         </form>
       </section>
       <aside className="account-panel" style={{ background: '#e9eddf', alignSelf: 'start' }}><ShieldCheck size={23}/><h2 className="display" style={{ color: '#285247', margin: '12px 0 8px' }}>Un proceso transparente.</h2><p className="subtle">Después de guardar, el equipo revisará el perfil. El estado cambia desde administración y no puede modificarse desde tu cuenta.</p><div className="notice-box"><CircleHelp size={16}/><span>{profile.data?.approvalStatus === 'approved' ? 'Tu perfil está aprobado y visible para la comunidad.' : profile.data?.approvalStatus === 'suspended' ? 'Tu perfil está suspendido. Contacta con el equipo de PetPulse si necesitas ayuda.' : 'Tu perfil se mostrará como pendiente hasta completar la revisión.'}</span></div></aside>
+    </div>}
+    {profile.data && !profile.isError && <div className="account-grid two provider-resources-grid">
+      <ProviderServicesPanel/>
+      <ProviderAvailabilityPanel/>
     </div>}
   </main>;
 }

@@ -4,11 +4,14 @@ type Row = Record<string, unknown>;
 type Condition =
   | { kind: "eq"; column: { name: string }; value: unknown }
   | { kind: "and" | "or"; conditions: Condition[] }
-  | { kind: "ilike"; column: { name: string }; pattern: string };
+  | { kind: "ilike"; column: { name: string }; pattern: string }
+  | { kind: "inArray"; column: { name: string }; values: unknown[] };
 
 const mocks = vi.hoisted(() => {
   const profiles: Row[] = [];
   const providers: Row[] = [];
+  const services: Row[] = [];
+  const availabilities: Row[] = [];
   const userProfilesTable = {
     tableName: "petpulse_user_profiles",
     id: { name: "id" },
@@ -29,6 +32,15 @@ const mocks = vi.hoisted(() => {
     approvalStatus: { name: "approvalStatus" },
     approvedAt: { name: "approvedAt" },
   };
+  const providerServicesTable = {
+    tableName: "petpulse_provider_services",
+    providerProfileId: { name: "providerProfileId" },
+    isActive: { name: "isActive" },
+  };
+  const providerAvailabilityTable = {
+    tableName: "petpulse_provider_availability",
+    providerProfileId: { name: "providerProfileId" },
+  };
 
   function matches(condition: Condition, row: Row): boolean {
     if (condition.kind === "eq") {
@@ -39,6 +51,9 @@ const mocks = vi.hoisted(() => {
     }
     if (condition.kind === "or") {
       return condition.conditions.some(item => matches(item, row));
+    }
+    if (condition.kind === "inArray") {
+      return condition.values.includes(row[condition.column.name]);
     }
     const value = String(row[condition.column.name] ?? "").toLowerCase();
     const needle = condition.pattern
@@ -55,7 +70,10 @@ const mocks = vi.hoisted(() => {
     let offset = 0;
     const builder = {
       from(table: { tableName: string }) {
-        rows = table.tableName === "petpulse_user_profiles" ? profiles : providers;
+        if (table.tableName === "petpulse_user_profiles") rows = profiles;
+        else if (table.tableName === "petpulse_provider_profiles") rows = providers;
+        else if (table.tableName === "petpulse_provider_services") rows = services;
+        else rows = availabilities;
         return builder;
       },
       where(value: Condition) {
@@ -97,8 +115,12 @@ const mocks = vi.hoisted(() => {
   return {
     profiles,
     providers,
+    services,
+    availabilities,
     userProfilesTable,
     providerProfilesTable,
+    providerServicesTable,
+    providerAvailabilityTable,
     query,
     insertValues: vi.fn(),
     getUserId: vi.fn(),
@@ -114,6 +136,7 @@ vi.mock("drizzle-orm", () => ({
   asc: (column: unknown) => column,
   eq: (column: { name: string }, value: unknown) => ({ kind: "eq", column, value }),
   ilike: (column: { name: string }, pattern: string) => ({ kind: "ilike", column, pattern }),
+  inArray: (column: { name: string }, values: unknown[]) => ({ kind: "inArray", column, values }),
   or: (...conditions: Condition[]) => ({ kind: "or", conditions }),
   sql: () => ({ kind: "count" }),
 }));
@@ -150,6 +173,8 @@ vi.mock("@workspace/db", () => ({
     }),
   },
   providerProfilesTable: mocks.providerProfilesTable,
+  providerServicesTable: mocks.providerServicesTable,
+  providerAvailabilityTable: mocks.providerAvailabilityTable,
   userProfilesTable: mocks.userProfilesTable,
 }));
 
@@ -166,6 +191,8 @@ let baseUrl: string;
 beforeEach(async () => {
   mocks.profiles.length = 0;
   mocks.providers.length = 0;
+  mocks.services.length = 0;
+  mocks.availabilities.length = 0;
   mocks.insertValues.mockClear();
   mocks.getUserId.mockReturnValue(null);
   server = app.listen(0);
@@ -257,9 +284,10 @@ describe("provider profile routes", () => {
   });
 
   it("publishes links only for approved provider profiles", async () => {
+    const approvedProviderId = "550e8400-e29b-41d4-a716-446655440004";
     mocks.providers.push(
       {
-        id: "550e8400-e29b-41d4-a716-446655440004",
+        id: approvedProviderId,
         name: "Clínica Abierta",
         category: "veterinary",
         neighborhood: "Centro",
@@ -282,7 +310,60 @@ describe("provider profile routes", () => {
         whatsappUrl: null,
         approvalStatus: "pending",
       },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440008",
+        name: "Clínica Suspendida",
+        category: "veterinary",
+        neighborhood: "Centro",
+        description: null,
+        websiteUrl: null,
+        instagramUrl: null,
+        facebookUrl: null,
+        whatsappUrl: null,
+        approvalStatus: "suspended",
+      },
     );
+    mocks.services.push(
+      {
+        id: "550e8400-e29b-41d4-a716-446655440006",
+        providerProfileId: approvedProviderId,
+        name: "Consulta",
+        description: null,
+        durationMinutes: 45,
+        priceCop: 80000,
+        isActive: true,
+      },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440007",
+        providerProfileId: approvedProviderId,
+        name: "Servicio archivado",
+        description: null,
+        durationMinutes: 30,
+        priceCop: null,
+        isActive: false,
+      },
+      {
+        id: "550e8400-e29b-41d4-a716-446655440009",
+        providerProfileId: "550e8400-e29b-41d4-a716-446655440005",
+        name: "Servicio pendiente",
+        description: null,
+        durationMinutes: 30,
+        priceCop: null,
+        isActive: true,
+      },
+    );
+    mocks.availabilities.push({
+      providerProfileId: approvedProviderId,
+      timezone: "America/Bogota",
+      weeklyWindows: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00" }],
+      exceptions: [{ date: "2026-06-15", isClosed: true, windows: [] }],
+    });
+    mocks.availabilities.push({
+      providerProfileId: "550e8400-e29b-41d4-a716-446655440005",
+      timezone: "America/Bogota",
+      weeklyWindows: [{ dayOfWeek: 2, startTime: "10:00", endTime: "16:00" }],
+      exceptions: [],
+    });
 
     const response = await fetch(`${baseUrl}/api/providers`);
 
@@ -290,9 +371,19 @@ describe("provider profile routes", () => {
     expect(await response.json()).toMatchObject({
       total: 1,
       items: [{
-        id: "550e8400-e29b-41d4-a716-446655440004",
+        id: approvedProviderId,
         websiteUrl: "https://approved.example",
         instagramUrl: "https://instagram.com/approved",
+        services: [{
+          id: "550e8400-e29b-41d4-a716-446655440006",
+          name: "Consulta",
+          priceCop: 80000,
+        }],
+        availability: {
+          timezone: "America/Bogota",
+          weeklyWindows: [{ dayOfWeek: 1, startTime: "09:00", endTime: "17:00" }],
+          exceptions: [{ date: "2026-06-15", isClosed: true, windows: [] }],
+        },
       }],
     });
   });
