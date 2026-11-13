@@ -116,11 +116,11 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
   const [notice, setNotice] = useState('');
 
   const publicProviders = useListPublicProviders(
-    { page: 1, pageSize: 120 },
+    { page: 1, pageSize: 50 },
     {
       query: {
         enabled: me.role === 'owner',
-        queryKey: getListPublicProvidersQueryKey({ page: 1, pageSize: 120 }),
+        queryKey: getListPublicProvidersQueryKey({ page: 1, pageSize: 50 }),
       },
     },
   );
