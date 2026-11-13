@@ -12,6 +12,13 @@ const mocks = vi.hoisted(() => ({
       createdAt: { name: "createdAt" },
       qrToken: { name: "qrToken" },
     },
+    lostPetReports: {
+      id: { name: "id" },
+      petId: { name: "petId" },
+      previousPetStatus: { name: "previousPetStatus" },
+      expiresAt: { name: "expiresAt" },
+      status: { name: "status" },
+    },
   },
 }));
 
@@ -26,14 +33,18 @@ vi.mock("drizzle-orm", () => ({
   and: (...conditions: unknown[]) => conditions,
   asc: (column: unknown) => ({ column, direction: "asc" }),
   eq: (column: unknown, value: string) => ({ column, value }),
+  lte: (column: unknown, value: Date) => ({ column, value }),
   sql: () => ({}),
 }));
 
 vi.mock("@workspace/db", () => ({
   db: {
     select: () => ({
-      from: () => ({
+      from: (table: unknown) => ({
         where: (condition: { column: { name: string }; value: string }) => {
+          if (table === mocks.tables.lostPetReports) {
+            return Promise.resolve([]);
+          }
           const matchingRows = () => {
             if (condition.column.name === "clerkUserId") {
               const profile = mocks.profiles.get(condition.value);
@@ -52,6 +63,7 @@ vi.mock("@workspace/db", () => ({
       }),
     }),
   },
+  lostPetReportsTable: mocks.tables.lostPetReports,
   petsTable: mocks.tables.pets,
   userProfilesTable: mocks.tables.userProfiles,
 }));

@@ -4,7 +4,7 @@ import {
 } from '@workspace/api-client-react';
 import type { MeProfile } from '@workspace/api-client-react';
 import {
-  CalendarClock, ChevronRight, Home, LogOut, MapPin, PawPrint, RefreshCw, ShieldCheck, Store,
+  AlertTriangle, CalendarClock, ChevronRight, Home, LogOut, MapPin, PawPrint, RefreshCw, ShieldCheck, Store,
 } from 'lucide-react';
 import { Link, Redirect, useLocation } from 'wouter';
 import type { ReactNode } from 'react';
@@ -41,6 +41,7 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
   const nav = [
     { href: '/workspace', label: 'Resumen', icon: Home },
     { href: '/workspace/map', label: 'Mapa', icon: MapPin },
+    { href: '/workspace/lost-pets', label: 'Perdidas', icon: AlertTriangle },
     { href: '/directory', label: 'Directorio', icon: Store },
     ...(['owner', 'provider'].includes(me.role) ? [{ href: '/workspace/appointments', label: 'Citas', icon: CalendarClock }] : []),
     ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mascotas', icon: PawPrint }] : []),

@@ -20,6 +20,7 @@ const DemoApp = lazy(() => import('./DemoApp').then(module => ({ default: module
 const AdminPage = lazy(() => import('@/pages/AdminPage'));
 const AppointmentsPage = lazy(() => import('@/pages/AppointmentsPage'));
 const DirectoryPage = lazy(() => import('@/pages/DirectoryPage'));
+const LostPetsPage = lazy(() => import('@/pages/LostPetsPage'));
 const SignInPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignInPage })));
 const SignUpPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignUpPage })));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
@@ -75,6 +76,7 @@ function RouterContent() {
         <Route path="/workspace/appointments"><PrivateRoute>{me => <AppointmentsPage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace"><PrivateRoute>{me => <WorkspaceHomePage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace/map"><PrivateRoute>{() => <WorkspaceMapPage/>}</PrivateRoute></Route>
+        <Route path="/workspace/lost-pets"><PrivateRoute>{me => <LostPetsPage me={me}/>}</PrivateRoute></Route>
         <Route path="/workspace/pets"><PrivateRoute role="owner">{() => <PetsPage/>}</PrivateRoute></Route>
         <Route path="/workspace/provider"><PrivateRoute role="provider">{() => <ProviderPage/>}</PrivateRoute></Route>
         <Route path="/workspace/admin"><PrivateRoute role="admin">{() => <AdminPage/>}</PrivateRoute></Route>

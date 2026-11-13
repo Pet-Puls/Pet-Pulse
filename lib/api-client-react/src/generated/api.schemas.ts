@@ -144,7 +144,6 @@ export type PetUpdateStatus = typeof PetUpdateStatus[keyof typeof PetUpdateStatu
 export const PetUpdateStatus = {
   home: 'home',
   walking: 'walking',
-  lost: 'lost',
 } as const;
 
 export interface PetUpdate {
@@ -177,6 +176,48 @@ export interface PetUpdate {
   status?: PetUpdateStatus;
 }
 
+export interface LostPetReportInput {
+  /**
+     * @minLength 2
+     * @maxLength 160
+     */
+  locationDescription: string;
+  lastSeenAt: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  notes?: string | null;
+  consentToShareLocation: boolean;
+}
+
+export type LostPetReportStatus = typeof LostPetReportStatus[keyof typeof LostPetReportStatus];
+
+
+export const LostPetReportStatus = {
+  active: 'active',
+  closed: 'closed',
+  expired: 'expired',
+} as const;
+
+export interface LostPetReport {
+  id: string;
+  petId: string;
+  petName: string;
+  species: string;
+  /** @nullable */
+  breed: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  locationDescription: string;
+  lastSeenAt: string;
+  /** @nullable */
+  notes: string | null;
+  expiresAt: string;
+  status: LostPetReportStatus;
+  canManage: boolean;
+}
+
 export interface PetQrResponse {
   /**
      * @minLength 43
@@ -194,7 +235,6 @@ export interface PublicPetProfile {
   photoUrl: string | null;
   /** @nullable */
   emergencyContact: string | null;
-  isLost: boolean;
 }
 
 export type ProviderProfileCategory = typeof ProviderProfileCategory[keyof typeof ProviderProfileCategory];

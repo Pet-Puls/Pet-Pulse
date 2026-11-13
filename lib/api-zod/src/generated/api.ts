@@ -187,7 +187,7 @@ export const UpdatePetBody = zod.object({
   "age": zod.string().max(updatePetBodyAgeMax).nullish(),
   "emergencyContact": zod.string().max(updatePetBodyEmergencyContactMax).nullish(),
   "shareEmergencyContact": zod.boolean().optional(),
-  "status": zod.enum(['home', 'walking', 'lost']).optional()
+  "status": zod.enum(['home', 'walking']).optional()
 })
 
 export const UpdatePetResponse = zod.object({
@@ -214,6 +214,123 @@ export const DeletePetParams = zod.object({
 })
 
 export const DeletePetResponse = zod.void()
+
+
+/**
+ * @summary List active reports visible to members and reports owned by the current user
+ */
+export const ListLostPetReportsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+export const ListLostPetReportsResponse = zod.array(ListLostPetReportsResponseItem)
+
+
+/**
+ * @summary Create a consented, member-only lost-pet report that expires after 72 hours
+ */
+export const CreateLostPetReportParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const createLostPetReportBodyLocationDescriptionMin = 2;
+export const createLostPetReportBodyLocationDescriptionMax = 160;
+
+export const createLostPetReportBodyNotesMax = 500;
+
+
+
+export const CreateLostPetReportBody = zod.object({
+  "locationDescription": zod.string().min(createLostPetReportBodyLocationDescriptionMin).max(createLostPetReportBodyLocationDescriptionMax),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().max(createLostPetReportBodyNotesMax).nullish(),
+  "consentToShareLocation": zod.boolean()
+})
+
+export const CreateLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+
+
+/**
+ * @summary Close a lost-pet report owned by the current user
+ */
+export const CloseLostPetReportParams = zod.object({
+  "reportId": zod.coerce.string().uuid()
+})
+
+export const CloseLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+
+
+/**
+ * @summary Renew an active or expired report for another 72 hours with renewed consent
+ */
+export const RenewLostPetReportParams = zod.object({
+  "reportId": zod.coerce.string().uuid()
+})
+
+export const renewLostPetReportBodyLocationDescriptionMin = 2;
+export const renewLostPetReportBodyLocationDescriptionMax = 160;
+
+export const renewLostPetReportBodyNotesMax = 500;
+
+
+
+export const RenewLostPetReportBody = zod.object({
+  "locationDescription": zod.string().min(renewLostPetReportBodyLocationDescriptionMin).max(renewLostPetReportBodyLocationDescriptionMax),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().max(renewLostPetReportBodyNotesMax).nullish(),
+  "consentToShareLocation": zod.boolean()
+})
+
+export const RenewLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
 
 
 /**
@@ -283,8 +400,7 @@ export const GetPublicPetResponse = zod.object({
   "species": zod.string(),
   "breed": zod.string().nullable(),
   "photoUrl": zod.string().url().nullable(),
-  "emergencyContact": zod.string().nullable(),
-  "isLost": zod.boolean()
+  "emergencyContact": zod.string().nullable()
 })
 
 

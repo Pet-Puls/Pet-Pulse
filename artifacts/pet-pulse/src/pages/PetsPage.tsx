@@ -8,7 +8,7 @@ import {
   createPetQr, getListPetsQueryKey, revokePetQr, uploadPetPhoto,
   useCreatePet, useDeletePet, useListPets, useUpdatePet,
 } from '@workspace/api-client-react';
-import type { PetInput, PetProfile } from '@workspace/api-client-react';
+import type { PetInput, PetProfile, PetUpdate } from '@workspace/api-client-react';
 import { basePath } from '@/app/config';
 import { ErrorPanel, LoadingPanel, PageHeading, errorMessage } from '@/components/app-shared';
 import { PetSummary } from './WorkspaceHomePage';
@@ -24,7 +24,7 @@ function PetEditor({
 }: {
   pet?: PetProfile;
   onClose: () => void;
-  onSaved: (input: PetInput, photo: File | undefined, status: PetProfile['status']) => void;
+  onSaved: (input: PetInput, photo: File | undefined, status?: PetUpdate['status']) => void;
   saving: boolean;
 }) {
   const [name, setName] = useState(pet?.name || '');
@@ -32,7 +32,7 @@ function PetEditor({
   const [breed, setBreed] = useState(pet?.breed || '');
   const [age, setAge] = useState(pet?.age || '');
   const [contact, setContact] = useState(pet?.emergencyContact || '');
-  const [status, setStatus] = useState<PetProfile['status']>(pet?.status ?? 'home');
+  const [status, setStatus] = useState<PetUpdate['status']>(pet?.status === 'lost' ? undefined : pet?.status ?? 'home');
   const [shareEmergencyContact, setShareEmergencyContact] = useState(pet?.shareEmergencyContact || false);
   const [photo, setPhoto] = useState<File>();
   const [photoError, setPhotoError] = useState('');
@@ -86,7 +86,8 @@ function PetEditor({
       <div className="account-field"><label htmlFor="pet-species">Especie</label><input id="pet-species" value={species} required maxLength={60} disabled={saving} onChange={e => setSpecies(e.target.value)} placeholder="Perro, gato…"/></div>
       <div className="account-field"><label htmlFor="pet-breed">Raza (opcional)</label><input id="pet-breed" value={breed} maxLength={120} disabled={saving} onChange={e => setBreed(e.target.value)}/></div>
       <div className="account-field"><label htmlFor="pet-age">Edad (opcional)</label><input id="pet-age" value={age} maxLength={80} disabled={saving} onChange={e => setAge(e.target.value)} placeholder="Ej. 4 años"/></div>
-      {pet && <div className="account-field"><label htmlFor="pet-status">Estado actual</label><select id="pet-status" value={status} disabled={saving} onChange={e => setStatus(e.target.value as PetProfile['status'])}><option value="home">En casa</option><option value="walking">De paseo</option><option value="lost">Perdida</option></select></div>}
+      {pet && pet.status !== 'lost' && <div className="account-field"><label htmlFor="pet-status">Estado actual</label><select id="pet-status" value={status ?? 'home'} disabled={saving} onChange={e => setStatus(e.target.value as NonNullable<PetUpdate['status']>)}><option value="home">En casa</option><option value="walking">De paseo</option></select></div>}
+      {pet?.status === 'lost' && <p className="notice-box">El estado de búsqueda se administra desde la sección “Mascotas perdidas”.</p>}
       <div className="account-field full"><label htmlFor="pet-emergency">Contacto de emergencia (opcional)</label><input id="pet-emergency" value={contact} maxLength={240} disabled={saving} onChange={e => setContact(e.target.value)} placeholder="Teléfono y nombre"/></div>
       <label className="pet-contact-consent"><input type="checkbox" checked={shareEmergencyContact} disabled={saving} onChange={event => setShareEmergencyContact(event.target.checked)}/><span><strong>Compartir este contacto en el QR público</strong><small>Solo será visible si activas esta opción. Puedes cambiarla o revocar el QR cuando quieras.</small></span></label>
       <div className="account-form-actions"><button type="button" className="account-button outline" onClick={onClose} disabled={saving}>Cancelar</button><button className="account-button" type="submit" disabled={saving}>{saving ? 'Guardando…' : 'Guardar perfil'} <Check size={15}/></button></div>
@@ -245,14 +246,14 @@ export default function PetsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const closeQr = useCallback(() => setQrPet(null), []);
 
-  async function save(input: PetInput, photo: File | undefined, status: PetProfile['status']) {
+  async function save(input: PetInput, photo: File | undefined, status?: PetUpdate['status']) {
     setFailure('');
     setIsSaving(true);
     try {
       const creating = !editing || editing === 'new';
       const savedPet = creating
         ? await createPet.mutateAsync({ data: input })
-        : await updatePet.mutateAsync({ petId: editing.id, data: { ...input, status } });
+        : await updatePet.mutateAsync({ petId: editing.id, data: { ...input, ...(status ? { status } : {}) } });
       if (creating) setEditing(savedPet);
       if (photo) {
         await uploadPetPhoto(savedPet.id, photo, { headers: { 'Content-Type': photo.type } });

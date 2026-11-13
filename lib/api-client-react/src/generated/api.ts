@@ -34,6 +34,8 @@ import type {
   HealthStatus,
   ListAdminProvidersParams,
   ListPublicProvidersParams,
+  LostPetReport,
+  LostPetReportInput,
   MeProfile,
   NotificationPreferences,
   NotificationPreferencesInput,
@@ -913,6 +915,359 @@ export const useDeletePet = <TError = ErrorType<ApiError>,
         TContext
       > => {
       return useMutation(getDeletePetMutationOptions(options), queryClient);
+    }
+
+export const getListLostPetReportsUrl = () => {
+
+
+
+
+  return `/api/lost-pet-reports`
+}
+
+/**
+ * @summary List active reports visible to members and reports owned by the current user
+ */
+export const listLostPetReports = async ( options?: Parameters<typeof customFetch>[1]): Promise<LostPetReport[]> => {
+
+  return customFetch<LostPetReport[]>(getListLostPetReportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLostPetReportsQueryKey = () => {
+    return [
+    `/api/lost-pet-reports`
+    ] as const;
+    }
+
+
+export const getListLostPetReportsQueryOptions = <TData = Awaited<ReturnType<typeof listLostPetReports>>, TError = ErrorType<ApiError>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLostPetReportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLostPetReports>>> = ({ signal }) => listLostPetReports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListLostPetReportsQueryResult = NonNullable<Awaited<ReturnType<typeof listLostPetReports>>>
+export type ListLostPetReportsQueryError = ErrorType<ApiError>
+
+
+export function useListLostPetReports<TData = Awaited<ReturnType<typeof listLostPetReports>>, TError = ErrorType<ApiError>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLostPetReports>>,
+          TError,
+          Awaited<ReturnType<typeof listLostPetReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLostPetReports<TData = Awaited<ReturnType<typeof listLostPetReports>>, TError = ErrorType<ApiError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listLostPetReports>>,
+          TError,
+          Awaited<ReturnType<typeof listLostPetReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListLostPetReports<TData = Awaited<ReturnType<typeof listLostPetReports>>, TError = ErrorType<ApiError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List active reports visible to members and reports owned by the current user
+ */
+
+export function useListLostPetReports<TData = Awaited<ReturnType<typeof listLostPetReports>>, TError = ErrorType<ApiError>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listLostPetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListLostPetReportsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateLostPetReportUrl = (petId: string,) => {
+
+
+
+
+  return `/api/pets/${petId}/lost-reports`
+}
+
+/**
+ * @summary Create a consented, member-only lost-pet report that expires after 72 hours
+ */
+export const createLostPetReport = async (petId: string,
+    lostPetReportInput: LostPetReportInput, options?: Parameters<typeof customFetch>[1]): Promise<LostPetReport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<LostPetReport>(getCreateLostPetReportUrl(petId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lostPetReportInput)
+  }
+);}
+
+
+
+
+
+export const getCreateLostPetReportMutationKey = () => ['createLostPetReport'] as const;
+
+export const getCreateLostPetReportMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLostPetReport>>, TError,CreateLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createLostPetReport>>, TError,CreateLostPetReportMutationVariables, TContext> => {
+
+const mutationKey = getCreateLostPetReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createLostPetReport>>, CreateLostPetReportMutationVariables> = (props) => {
+          const {petId,data} = props ?? {};
+
+          return  createLostPetReport(petId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateLostPetReportMutationResult = NonNullable<Awaited<ReturnType<typeof createLostPetReport>>>
+    export type CreateLostPetReportMutationBody = BodyType<LostPetReportInput>
+    export type CreateLostPetReportMutationError = ErrorType<ApiError>
+    export type CreateLostPetReportMutationVariables = {petId: string;data: BodyType<LostPetReportInput>}
+
+    /**
+ * @summary Create a consented, member-only lost-pet report that expires after 72 hours
+ */
+export const useCreateLostPetReport = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLostPetReport>>, TError,CreateLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createLostPetReport>>,
+        TError,
+        CreateLostPetReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateLostPetReportMutationOptions(options), queryClient);
+    }
+
+export const getCloseLostPetReportUrl = (reportId: string,) => {
+
+
+
+
+  return `/api/lost-pet-reports/${reportId}/close`
+}
+
+/**
+ * @summary Close a lost-pet report owned by the current user
+ */
+export const closeLostPetReport = async (reportId: string, options?: Parameters<typeof customFetch>[1]): Promise<LostPetReport> => {
+
+  return customFetch<LostPetReport>(getCloseLostPetReportUrl(reportId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCloseLostPetReportMutationKey = () => ['closeLostPetReport'] as const;
+
+export const getCloseLostPetReportMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeLostPetReport>>, TError,CloseLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeLostPetReport>>, TError,CloseLostPetReportMutationVariables, TContext> => {
+
+const mutationKey = getCloseLostPetReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeLostPetReport>>, CloseLostPetReportMutationVariables> = (props) => {
+          const {reportId} = props ?? {};
+
+          return  closeLostPetReport(reportId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseLostPetReportMutationResult = NonNullable<Awaited<ReturnType<typeof closeLostPetReport>>>
+
+    export type CloseLostPetReportMutationError = ErrorType<ApiError>
+    export type CloseLostPetReportMutationVariables = {reportId: string}
+
+    /**
+ * @summary Close a lost-pet report owned by the current user
+ */
+export const useCloseLostPetReport = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeLostPetReport>>, TError,CloseLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof closeLostPetReport>>,
+        TError,
+        CloseLostPetReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCloseLostPetReportMutationOptions(options), queryClient);
+    }
+
+export const getRenewLostPetReportUrl = (reportId: string,) => {
+
+
+
+
+  return `/api/lost-pet-reports/${reportId}/renew`
+}
+
+/**
+ * @summary Renew an active or expired report for another 72 hours with renewed consent
+ */
+export const renewLostPetReport = async (reportId: string,
+    lostPetReportInput: LostPetReportInput, options?: Parameters<typeof customFetch>[1]): Promise<LostPetReport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<LostPetReport>(getRenewLostPetReportUrl(reportId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(lostPetReportInput)
+  }
+);}
+
+
+
+
+
+export const getRenewLostPetReportMutationKey = () => ['renewLostPetReport'] as const;
+
+export const getRenewLostPetReportMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renewLostPetReport>>, TError,RenewLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renewLostPetReport>>, TError,RenewLostPetReportMutationVariables, TContext> => {
+
+const mutationKey = getRenewLostPetReportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renewLostPetReport>>, RenewLostPetReportMutationVariables> = (props) => {
+          const {reportId,data} = props ?? {};
+
+          return  renewLostPetReport(reportId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenewLostPetReportMutationResult = NonNullable<Awaited<ReturnType<typeof renewLostPetReport>>>
+    export type RenewLostPetReportMutationBody = BodyType<LostPetReportInput>
+    export type RenewLostPetReportMutationError = ErrorType<ApiError>
+    export type RenewLostPetReportMutationVariables = {reportId: string;data: BodyType<LostPetReportInput>}
+
+    /**
+ * @summary Renew an active or expired report for another 72 hours with renewed consent
+ */
+export const useRenewLostPetReport = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renewLostPetReport>>, TError,RenewLostPetReportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof renewLostPetReport>>,
+        TError,
+        RenewLostPetReportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRenewLostPetReportMutationOptions(options), queryClient);
     }
 
 export const getUploadPetPhotoUrl = (petId: string,) => {

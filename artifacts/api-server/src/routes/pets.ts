@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { Router, type IRouter } from "express";
 import express from "express";
 import {
@@ -13,7 +13,8 @@ import {
   UpdatePetParams,
   UpdatePetResponse,
 } from "@workspace/api-zod";
-import { db, petsTable } from "@workspace/db";
+import { db, lostPetReportsTable, petsTable } from "@workspace/db";
+import { expireLostPetReports } from "../lib/lostPetReports";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { logger } from "../lib/logger";
 import {
@@ -68,7 +69,6 @@ router.get("/public/pets/:token", async (req, res): Promise<void> => {
     breed: pet.breed,
     photoUrl: pet.photoPath ? await getPetPhotoUrl(pet.photoPath) : null,
     emergencyContact: pet.shareEmergencyContact ? pet.emergencyContact : null,
-    isLost: pet.status === "lost",
   };
   res.setHeader("Cache-Control", "no-store");
   res.json(GetPublicPetResponse.parse(profile));
@@ -83,6 +83,7 @@ router.get("/pets", requireRole("owner"), async (req, res): Promise<void> => {
     return;
   }
 
+  await expireLostPetReports();
   const pets = await db
     .select()
     .from(petsTable)
@@ -142,6 +143,27 @@ router.patch(
     if (!profile) {
       res.status(403).json({ error: "Completa la configuración de tu cuenta." });
       return;
+    }
+
+    if (parsed.data.status !== undefined) {
+      const [activeReport] = await db
+        .select({ id: lostPetReportsTable.id })
+        .from(lostPetReportsTable)
+        .where(
+          and(
+            eq(lostPetReportsTable.petId, params.data.petId),
+            eq(lostPetReportsTable.ownerId, profile.id),
+            eq(lostPetReportsTable.status, "active"),
+            gt(lostPetReportsTable.expiresAt, new Date()),
+          ),
+        )
+        .limit(1);
+      if (activeReport) {
+        res.status(409).json({
+          error: "Cierra el reporte de búsqueda antes de cambiar el estado de la mascota.",
+        });
+        return;
+      }
     }
 
     const update = {

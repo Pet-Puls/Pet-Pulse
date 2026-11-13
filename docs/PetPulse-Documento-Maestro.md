@@ -229,10 +229,10 @@ La versión final puede incorporar páginas públicas de presentación, alta de 
 ### 8.3 Reportar una mascota perdida
 
 1. La persona tutora elige la mascota y activa el reporte.
-2. Confirma la hora y la última ubicación que desea compartir.
-3. El sistema muestra qué datos serán visibles, por cuánto tiempo y para quién.
-4. La red recibe el aviso según sus permisos y canales disponibles.
-5. La persona tutora marca a la mascota como encontrada y cierra el caso.
+2. Indica cuándo la vio por última vez y el barrio o sector aproximado, sin dirección exacta ni rastreo GPS.
+3. El sistema explica que los datos serán visibles solo para miembros con sesión iniciada durante 72 horas y solicita consentimiento explícito.
+4. Los miembros pueden consultar el reporte mientras esté vigente; no se envían avisos por correo mientras esa integración esté pausada.
+5. La persona tutora puede cerrar el reporte al encontrarla o renovarlo por 72 horas, confirmando de nuevo el consentimiento.
 
 ### 8.4 Gestionar servicios como proveedor
 
@@ -256,7 +256,7 @@ La versión final puede incorporar páginas públicas de presentación, alta de 
 - La geolocalización del navegador representa el teléfono que la solicita; **no rastrea automáticamente a una mascota ni a un collar**.
 - La integración con un collar requiere compatibilidad, autorización de su cuenta y una fuente de datos real.
 - Un QR público no debe contener directamente teléfono, domicilio, credenciales ni historial médico completo. Debe resolver a una vista controlada y revocable.
-- La ubicación de una mascota perdida debe limitarse por tiempo y alcance; definir qué puede ver un miembro de la comunidad y qué queda solo para la persona tutora.
+- El reporte de mascota perdida comparte solo barrio/sector aproximado con miembros autenticados; vence a las 72 horas, puede cerrarse antes y exige nuevo consentimiento para renovarse. El QR público no indica que exista un reporte ni revela su ubicación.
 - Los datos de salud deben tener acceso limitado y su uso debe explicarse con claridad.
 - Los proveedores deben declarar información veraz; cualquier insignia de verificación requiere un proceso verificable.
 - Las calificaciones públicas necesitan reglas contra fraude, represalias y divulgación de información personal.

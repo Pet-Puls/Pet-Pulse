@@ -30,7 +30,7 @@ La puerta de privacidad se probó en staging. Las migraciones `0003`–`0005` se
 - **Base de aplicación:** cuenta, roles, perfiles de mascota y proveedor; revisión administrativa de proveedores.
 - **Mascotas:** edición, foto privada, QR limitado, consentimiento y revocación están implementados y se probaron en staging con datos ficticios; falta confirmar directamente el ajuste de privacidad del bucket en Supabase.
 - **Directorio público:** consulta perfiles aprobados, servicios activos y disponibilidad desde la API, con búsqueda, filtro, paginación y enlaces HTTPS opcionales; requiere API y base de datos disponibles.
-- **Demostración, no operación real:** alertas comunitarias de pérdida, métricas administrativas simuladas y movimiento de mascotas. Las citas ya usan API y persistencia local; falta desplegar el código y validar los flujos en staging.
+- **Demostración, no operación real:** la ruta `/demo` conserva alertas de pérdida, métricas y movimientos simulados. El espacio autenticado ya incluye localmente reportes persistentes de mascotas perdidas; falta aplicar la migración 0006 y validar el flujo en staging.
 - **Mapa:** muestra sugerencias externas de OpenStreetMap/Photon, señaladas como no verificadas y con enlace para reportar correcciones a OSM. Aún no representa ubicaciones de proveedores verificadas por PetPulse. La ubicación del navegador corresponde a la persona usuaria y no rastrea a una mascota.
 
 Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opcionales. Se exige HTTPS y se valida que los enlaces sociales correspondan al dominio de su red. Los cambios al perfil regresan al estado pendiente de revisión; el directorio público solo lista perfiles aprobados. La migración `0002_provider_social_links.sql` se aplicó en staging. Servicios y disponibilidad permiten configuración aunque el proveedor esté pendiente, pero solo se publican para perfiles aprobados.
@@ -119,7 +119,7 @@ El documento maestro contiene una especificación de producto más amplia. Esta 
 | RF-07 | Consultar lugares cercanos y zona en el mapa                             | Implementado con datos externos claramente indicados como no verificados; permite reportar en OSM |
 | RF-08 | Gestionar servicios y disponibilidad de proveedor                        | Código API/UI local; migración aplicada en staging; falta desplegar y validar el flujo |
 | RF-09 | Solicitar y gestionar citas con prevención de dobles reservas            | Implementado localmente; migración aplicada en staging; falta desplegar y validar el flujo |
-| RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Pendiente; requiere diseño de privacidad                              |
+| RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Implementado localmente para miembros autenticados; barrio/sector aproximado, consentimiento explícito, cierre y renovación; vigencia de 72 horas. Falta migrar y probar en staging |
 | RF-11 | Registrar historial de salud y recordatorios                             | Pendiente; no debe interpretarse como diagnóstico                     |
 | RF-12 | Gestionar notificaciones, preferencias y estado de entrega               | Email Gmail con reintentos, preferencia WhatsApp y outbox diferida implementados localmente; falta configurar Gmail y validar staging |
 | RF-13 | Eliminar/exportar cuenta y aplicar retención definida                    | Pendiente                                                             |
@@ -193,7 +193,7 @@ Los siguientes issues son propuestas para crear en GitHub cuando haya acceso. **
 **ISSUE-12 — Implementar reportes de mascota perdida con divulgación temporal**\
 **HU:** Como tutor, quiero avisar que mi mascota se perdió y controlar qué ubicación y contacto compartir.\
 **RF/RNF:** RF-10, RF-12; RNF-03 privacidad y RNF-04 fiabilidad.\
-**Criterios:** activar/actualizar/cerrar reporte; consentimiento, alcance y expiración visibles; ubicación no se presenta como GPS si no existe fuente real.
+**Criterios:** activar/actualizar/cerrar reporte; solo miembros autenticados ven el barrio/sector aproximado; consentimiento explícito y vencimiento a las 72 horas; renovar requiere confirmar de nuevo; el QR público no muestra el reporte; ubicación no se presenta como GPS si no existe fuente real. La implementación local está lista; falta aplicar la migración 0006 y validar en staging.
 
 **ISSUE-13 — Implementar historial de salud básico y recordatorios**\
 **HU:** Como tutor, quiero organizar vacunas y cuidados con fecha y fuente.\

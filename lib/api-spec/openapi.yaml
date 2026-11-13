@@ -233,12 +233,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
-        "404":
-          description: Pet not found for the current owner
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
     delete:
       operationId: deletePet
       tags: [pets]
@@ -267,6 +261,185 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "404":
           description: Pet not found for the current owner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /lost-pet-reports:
+    get:
+      operationId: listLostPetReports
+      tags: [pets]
+      summary: List active reports visible to members and reports owned by the current user
+      responses:
+        "200":
+          description: Member-visible reports and the current owner's report history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LostPetReport"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Completed account profile required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /pets/{petId}/lost-reports:
+    post:
+      operationId: createLostPetReport
+      tags: [pets]
+      summary: Create a consented, member-only lost-pet report that expires after 72 hours
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostPetReportInput"
+      responses:
+        "201":
+          description: Created lost-pet report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPetReport"
+        "400":
+          description: Invalid report data or consent not granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Pet not found in the current owner's account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Pet already has an active report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /lost-pet-reports/{reportId}/close:
+    post:
+      operationId: closeLostPetReport
+      tags: [pets]
+      summary: Close a lost-pet report owned by the current user
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Closed lost-pet report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPetReport"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Report not found in the current owner's account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Report is no longer active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /lost-pet-reports/{reportId}/renew:
+    post:
+      operationId: renewLostPetReport
+      tags: [pets]
+      summary: Renew an active or expired report for another 72 hours with renewed consent
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LostPetReportInput"
+      responses:
+        "200":
+          description: Renewed lost-pet report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPetReport"
+        "400":
+          description: Invalid report data or consent not granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Owner role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Report not found in the current owner's account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Closed report cannot be renewed
           content:
             application/json:
               schema:
@@ -1196,7 +1369,72 @@ components:
           type: boolean
         status:
           type: string
-          enum: [home, walking, lost]
+          enum: [home, walking]
+    LostPetReportInput:
+      type: object
+      properties:
+        locationDescription:
+          type: string
+          minLength: 2
+          maxLength: 160
+        lastSeenAt:
+          type: string
+          format: date-time
+        notes:
+          type: ["string", "null"]
+          maxLength: 500
+        consentToShareLocation:
+          type: boolean
+      required:
+        - locationDescription
+        - lastSeenAt
+        - consentToShareLocation
+    LostPetReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        petId:
+          type: string
+          format: uuid
+        petName:
+          type: string
+        species:
+          type: string
+        breed:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+          format: uri
+        locationDescription:
+          type: string
+        lastSeenAt:
+          type: string
+          format: date-time
+        notes:
+          type: ["string", "null"]
+        expiresAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, closed, expired]
+        canManage:
+          type: boolean
+      required:
+        - id
+        - petId
+        - petName
+        - species
+        - breed
+        - photoUrl
+        - locationDescription
+        - lastSeenAt
+        - notes
+        - expiresAt
+        - status
+        - canManage
     PetQrResponse:
       type: object
       properties:
@@ -1220,15 +1458,12 @@ components:
           format: uri
         emergencyContact:
           type: ["string", "null"]
-        isLost:
-          type: boolean
       required:
         - name
         - species
         - breed
         - photoUrl
         - emergencyContact
-        - isLost
     ProviderProfile:
       type: object
       properties:
