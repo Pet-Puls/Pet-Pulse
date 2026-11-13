@@ -10,7 +10,7 @@ PetPulse es un monorepo pnpm con una SPA, una API y librerías compartidas de co
 
 Las fotos privadas y fichas QR revocables se probaron en staging con datos ficticios; el flujo firmado funcionó y el acceso público sin firma falló. El ajuste del bucket no se inspeccionó directamente en el panel de Supabase, y estas pruebas no certifican producción.
 
-La puerta de privacidad se probó en staging. Las migraciones `0003`–`0005` se aplicaron y verificaron allí el 13 de noviembre de 2026, después de validar un respaldo lógico del esquema `public`; no se aplicaron en producción. El código de servicios, disponibilidad, citas y avisos sigue local, por lo que su despliegue y validación funcional en staging siguen pendientes. No se recomienda agregar funciones de analítica predictiva antes de tener casos de uso y datos gobernados.
+La puerta de privacidad se probó en staging. Las migraciones `0003`–`0006` se aplicaron y verificaron allí el 13 de noviembre de 2026; no se aplicaron en producción. La migración `0006` añade el almacenamiento de reportes de mascotas perdidas y está registrada en el historial de Drizzle.
 
 ## 2. Estado actual y arquitectura
 
@@ -30,7 +30,7 @@ La puerta de privacidad se probó en staging. Las migraciones `0003`–`0005` se
 - **Base de aplicación:** cuenta, roles, perfiles de mascota y proveedor; revisión administrativa de proveedores.
 - **Mascotas:** edición, foto privada, QR limitado, consentimiento y revocación están implementados y se probaron en staging con datos ficticios; falta confirmar directamente el ajuste de privacidad del bucket en Supabase.
 - **Directorio público:** consulta perfiles aprobados, servicios activos y disponibilidad desde la API, con búsqueda, filtro, paginación y enlaces HTTPS opcionales; requiere API y base de datos disponibles.
-- **Demostración, no operación real:** la ruta `/demo` conserva alertas de pérdida, métricas y movimientos simulados. El espacio autenticado ya incluye localmente reportes persistentes de mascotas perdidas; falta aplicar la migración 0006 y validar el flujo en staging.
+- **Demostración, no operación real:** la ruta `/demo` conserva alertas de pérdida, métricas y movimientos simulados. El espacio autenticado ya incluye reportes persistentes de mascotas perdidas; el código y la migración están desplegados en staging. Se verificaron el acceso protegido de la API y la pantalla/formulario; falta probar el ciclo completo con cuentas de prueba y datos ficticios.
 - **Mapa:** muestra sugerencias externas de OpenStreetMap/Photon, señaladas como no verificadas y con enlace para reportar correcciones a OSM. Aún no representa ubicaciones de proveedores verificadas por PetPulse. La ubicación del navegador corresponde a la persona usuaria y no rastrea a una mascota.
 
 Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opcionales. Se exige HTTPS y se valida que los enlaces sociales correspondan al dominio de su red. Los cambios al perfil regresan al estado pendiente de revisión; el directorio público solo lista perfiles aprobados. La migración `0002_provider_social_links.sql` se aplicó en staging. Servicios y disponibilidad permiten configuración aunque el proveedor esté pendiente, pero solo se publican para perfiles aprobados.
@@ -119,7 +119,7 @@ El documento maestro contiene una especificación de producto más amplia. Esta 
 | RF-07 | Consultar lugares cercanos y zona en el mapa                             | Implementado con datos externos claramente indicados como no verificados; permite reportar en OSM |
 | RF-08 | Gestionar servicios y disponibilidad de proveedor                        | Código API/UI local; migración aplicada en staging; falta desplegar y validar el flujo |
 | RF-09 | Solicitar y gestionar citas con prevención de dobles reservas            | Implementado localmente; migración aplicada en staging; falta desplegar y validar el flujo |
-| RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Implementado localmente para miembros autenticados; barrio/sector aproximado, consentimiento explícito, cierre y renovación; vigencia de 72 horas. Falta migrar y probar en staging |
+| RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Desplegado en staging; migración 0006 aplicada; barrio/sector aproximado, consentimiento explícito, cierre y renovación; vigencia de 72 horas. Falta probar el ciclo completo con datos ficticios |
 | RF-11 | Registrar historial de salud y recordatorios                             | Pendiente; no debe interpretarse como diagnóstico                     |
 | RF-12 | Gestionar notificaciones, preferencias y estado de entrega               | Email Gmail con reintentos, preferencia WhatsApp y outbox diferida implementados localmente; falta configurar Gmail y validar staging |
 | RF-13 | Eliminar/exportar cuenta y aplicar retención definida                    | Pendiente                                                             |
@@ -193,7 +193,7 @@ Los siguientes issues son propuestas para crear en GitHub cuando haya acceso. **
 **ISSUE-12 — Implementar reportes de mascota perdida con divulgación temporal**\
 **HU:** Como tutor, quiero avisar que mi mascota se perdió y controlar qué ubicación y contacto compartir.\
 **RF/RNF:** RF-10, RF-12; RNF-03 privacidad y RNF-04 fiabilidad.\
-**Criterios:** activar/actualizar/cerrar reporte; solo miembros autenticados ven el barrio/sector aproximado; consentimiento explícito y vencimiento a las 72 horas; renovar requiere confirmar de nuevo; el QR público no muestra el reporte; ubicación no se presenta como GPS si no existe fuente real. La implementación local está lista; falta aplicar la migración 0006 y validar en staging.
+**Criterios:** activar/actualizar/cerrar reporte; solo miembros autenticados ven el barrio/sector aproximado; consentimiento explícito y vencimiento a las 72 horas; renovar requiere confirmar de nuevo; el QR público no muestra el reporte; ubicación no se presenta como GPS si no existe fuente real. El código está desplegado y la migración 0006 está aplicada en staging; falta verificar creación, visibilidad entre miembros, cierre, renovación y vencimiento con datos ficticios.
 
 **ISSUE-13 — Implementar historial de salud básico y recordatorios**\
 **HU:** Como tutor, quiero organizar vacunas y cuidados con fecha y fuente.\
