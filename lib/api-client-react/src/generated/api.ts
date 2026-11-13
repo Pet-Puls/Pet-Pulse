@@ -29,6 +29,7 @@ import type {
   ApiError,
   HealthStatus,
   ListAdminProvidersParams,
+  ListPublicProvidersParams,
   MeProfile,
   OnboardingInput,
   PetInput,
@@ -38,7 +39,8 @@ import type {
   ProviderApprovalInput,
   ProviderProfile,
   ProviderProfileInput,
-  PublicPetProfile
+  PublicPetProfile,
+  PublicProviderPage
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1239,6 +1241,114 @@ export const useSaveProviderProfile = <TError = ErrorType<ApiError>,
       > => {
       return useMutation(getSaveProviderProfileMutationOptions(options), queryClient);
     }
+
+export const getListPublicProvidersUrl = (params?: ListPublicProvidersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/providers?${stringifiedParams}` : `/api/providers`
+}
+
+/**
+ * @summary List approved providers in the public directory
+ */
+export const listPublicProviders = async (params?: ListPublicProvidersParams, options?: Parameters<typeof customFetch>[1]): Promise<PublicProviderPage> => {
+
+  return customFetch<PublicProviderPage>(getListPublicProvidersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPublicProvidersQueryKey = (params?: ListPublicProvidersParams,) => {
+    return [
+    `/api/providers`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPublicProvidersQueryOptions = <TData = Awaited<ReturnType<typeof listPublicProviders>>, TError = ErrorType<ApiError>>(params?: ListPublicProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPublicProvidersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicProviders>>> = ({ signal }) => listPublicProviders(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPublicProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listPublicProviders>>>
+export type ListPublicProvidersQueryError = ErrorType<ApiError>
+
+
+export function useListPublicProviders<TData = Awaited<ReturnType<typeof listPublicProviders>>, TError = ErrorType<ApiError>>(
+ params: undefined |  ListPublicProvidersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicProviders<TData = Awaited<ReturnType<typeof listPublicProviders>>, TError = ErrorType<ApiError>>(
+ params?: ListPublicProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicProviders<TData = Awaited<ReturnType<typeof listPublicProviders>>, TError = ErrorType<ApiError>>(
+ params?: ListPublicProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List approved providers in the public directory
+ */
+
+export function useListPublicProviders<TData = Awaited<ReturnType<typeof listPublicProviders>>, TError = ErrorType<ApiError>>(
+ params?: ListPublicProvidersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPublicProvidersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetAdminOverviewUrl = () => {
 

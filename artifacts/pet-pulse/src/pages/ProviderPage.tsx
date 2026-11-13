@@ -6,11 +6,7 @@ import {
 } from '@workspace/api-client-react';
 import type { ProviderProfileInput } from '@workspace/api-client-react';
 import { ErrorPanel, LoadingPanel, PageHeading, errorMessage } from '@/components/app-shared';
-
-export const providerCategories = [
-  ['veterinary', 'Veterinaria'], ['daycare', 'Guardería'], ['walker', 'Paseador/a'],
-  ['shelter', 'Refugio'], ['store', 'Tienda'], ['other', 'Otro'],
-];
+import { providerCategories } from '@/features/providers';
 
 export default function ProviderPage() {
   const client = useQueryClient();
@@ -24,6 +20,10 @@ export default function ProviderPage() {
   const [category, setCategory] = useState<ProviderProfileInput['category']>('veterinary');
   const [neighborhood, setNeighborhood] = useState('');
   const [description, setDescription] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [whatsappUrl, setWhatsappUrl] = useState('');
   const [initialized, setInitialized] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -31,13 +31,26 @@ export default function ProviderPage() {
     if (profile.data && !initialized) {
       setName(profile.data.name); setCategory(profile.data.category);
       setNeighborhood(profile.data.neighborhood); setDescription(profile.data.description || '');
+      setWebsiteUrl(profile.data.websiteUrl || '');
+      setInstagramUrl(profile.data.instagramUrl || '');
+      setFacebookUrl(profile.data.facebookUrl || '');
+      setWhatsappUrl(profile.data.whatsappUrl || '');
       setInitialized(true);
     }
   }, [profile.data, initialized]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault(); setNotice('');
-    saveProfile.mutate({ data: { name: name.trim(), category, neighborhood: neighborhood.trim(), description: description.trim() || null } }, {
+    saveProfile.mutate({ data: {
+      name: name.trim(),
+      category,
+      neighborhood: neighborhood.trim(),
+      description: description.trim() || null,
+      websiteUrl: websiteUrl.trim() || null,
+      instagramUrl: instagramUrl.trim() || null,
+      facebookUrl: facebookUrl.trim() || null,
+      whatsappUrl: whatsappUrl.trim() || null,
+    } }, {
       onSuccess: () => { setInitialized(true); setNotice('Tu perfil se guardó y está pendiente de revisión.'); },
     });
   };
@@ -54,6 +67,11 @@ export default function ProviderPage() {
           <div className="account-field"><label htmlFor="business-category">Categoría</label><select id="business-category" value={category} onChange={e => setCategory(e.target.value as ProviderProfileInput['category'])}>{providerCategories.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
           <div className="account-field"><label htmlFor="business-neighborhood">Barrio o localidad</label><input id="business-neighborhood" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} required maxLength={120} placeholder="Ej. Malasaña"/></div>
           <div className="account-field full"><label htmlFor="business-description">Descripción (opcional)</label><textarea id="business-description" value={description} onChange={e => setDescription(e.target.value)} maxLength={1000} placeholder="Cuéntanos brevemente qué servicios ofreces."/></div>
+          <div className="account-field full"><div className="account-kicker">Enlaces públicos opcionales</div><p className="subtle">Solo se mostrarán en el directorio cuando tu perfil esté aprobado. Usa enlaces HTTPS.</p></div>
+          <div className="account-field"><label htmlFor="business-website">Sitio web</label><input id="business-website" type="url" maxLength={500} value={websiteUrl} onChange={e => setWebsiteUrl(e.target.value)} placeholder="https://tusitio.com"/></div>
+          <div className="account-field"><label htmlFor="business-instagram">Instagram</label><input id="business-instagram" type="url" maxLength={500} value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/tu-negocio"/></div>
+          <div className="account-field"><label htmlFor="business-facebook">Facebook</label><input id="business-facebook" type="url" maxLength={500} value={facebookUrl} onChange={e => setFacebookUrl(e.target.value)} placeholder="https://facebook.com/tu-negocio"/></div>
+          <div className="account-field"><label htmlFor="business-whatsapp">WhatsApp</label><input id="business-whatsapp" type="url" maxLength={500} value={whatsappUrl} onChange={e => setWhatsappUrl(e.target.value)} placeholder="https://wa.me/573001234567"/></div>
           <div className="account-form-actions"><button className="account-button" disabled={saveProfile.isPending}>{saveProfile.isPending ? 'Guardando…' : 'Guardar perfil'} <Check size={15}/></button></div>
         </form>
       </section>

@@ -19,7 +19,7 @@ La solución se dirige a tres grupos:
 2. **Asociados o proveedores**, como veterinarias, paseadores, guarderías, refugios y tiendas.
 3. **Administradores**, que supervisan la operación, los perfiles y las alertas de la plataforma.
 
-PetPulse conserva una demostración interactiva con datos simulados y ahora también incluye una base real de cuentas, roles y persistencia en servidor para perfiles de mascotas y proveedores. La demostración sigue guardando cambios en el navegador y está aislada de las cuentas reales. La ubicación GPS, las notificaciones externas, el directorio real, las citas de producción y varios controles operativos siguen siendo trabajo pendiente. Este documento distingue la base ya implementada de las capacidades todavía previstas.
+PetPulse conserva una demostración interactiva con datos simulados y también incluye cuentas, roles y persistencia en servidor para perfiles de mascotas y proveedores. Los perfiles reales permiten editar sus datos y cargar fotos privadas; sus QR públicos muestran una ficha limitada, son revocables y solo comparten el contacto de emergencia con consentimiento expreso. La demostración sigue guardando cambios en el navegador y está aislada de las cuentas reales. La ubicación GPS, las notificaciones externas, el directorio real, las citas de producción y varios controles operativos siguen siendo trabajo pendiente. Este documento distingue la base ya implementada de las capacidades todavía previstas.
 
 ## 2. Intención del proyecto
 
@@ -123,12 +123,11 @@ En el prototipo se cambia entre tres vistas mediante un selector. Esto sirve par
 
 - Recuperación de cuenta y políticas de retención/eliminación.
 - Ampliar el aislamiento y la propiedad de datos para organizaciones y equipos.
-- Edición, eliminación, validación y recuperación de registros.
+- Archivo, validación y recuperación de registros en flujos que aún no están cubiertos.
 - Historial médico básico y recordatorios.
 - Perfiles comerciales editables, disponibilidad y gestión real de citas.
 - GPS o seguimiento real de mascotas, alertas conectadas a ubicación y publicación de ubicaciones compartidas.
 - Coordenadas verificadas para los perfiles comerciales de PetPulse y un proveedor de mapas/lugares con capacidad operativa adecuada para producción.
-- QR válido y escaneable con reglas de privacidad.
 - Canales de comunicación reales y controles de entrega.
 - Verificación y moderación de proveedores.
 - Registro de auditoría, copias de seguridad, monitorización y recuperación.
@@ -141,8 +140,8 @@ Las rutas actuales son rutas del prototipo, no una decisión definitiva de naveg
 | Vista | Propósito | Estado |
 |---|---|---|
 | `/` Inicio | Resumen para el rol seleccionado y accesos a tareas frecuentes | Prototipo disponible |
-| `/map` Mapa | Mostrar mascotas y proveedores en una representación geográfica | Prototipo simulado; sin GPS ni mapa externo |
-| `/pets` Mascotas | Ver perfiles, añadir una mascota, abrir la ficha QR y activar una alerta | Prototipo disponible; faltan editar/eliminar e historial médico |
+| `/map` Mapa | Explorar lugares cercanos y buscar otra zona | Mapa externo integrado; ubicación del usuario solo bajo permiso, sin GPS de mascotas |
+| `/workspace/pets` Mascotas | Ver, añadir y editar perfiles, cargar fotos y gestionar su QR público revocable | Integrado con API; requiere configurar Supabase Storage y aplicar migraciones |
 | `/directory` Directorio | Buscar y filtrar proveedores por categoría, zona y servicio | Prototipo disponible; proveedores ficticios |
 | `/services` Servicios | Ver citas y agregar un servicio desde la vista de proveedor | Prototipo disponible; sin sincronización ni confirmación real |
 | `/admin` Operaciones | Ver métricas de muestra y resolver alertas simuladas | Prototipo disponible; sin control administrativo real |
@@ -342,14 +341,16 @@ La web mantiene rutas separadas para la experiencia de cuenta y para la demostra
 
 La primera versión del mapa usa teselas de OpenStreetMap y Photon para geocodificación y búsqueda cercana filtrada por categorías de OpenStreetMap. Las coordenadas consultadas se envían a Photon; la ubicación no se persiste en PetPulse. Los servicios son públicos y no ofrecen una garantía de disponibilidad adecuada para producción; antes de un lanzamiento con tráfico relevante se deben revisar sus políticas y límites y, si el uso lo requiere, contratar o desplegar servicios con capacidad y nivel de disponibilidad adecuados.
 
-Para recrear el despliegue en servicios externos se añadieron configuraciones separadas: Vercel para la interfaz, Render para la API, Supabase para PostgreSQL y una instancia Clerk externa para las cuentas fuera de Replit. La guía paso a paso está en `docs/deployment/PetPulse-Despliegue-Portatil.md`.
+Los perfiles reales de mascota admiten fotos mediante un bucket privado de Supabase Storage. Cada persona tutora puede crear o revocar un QR que abre `/pet/{token}`; esa ficha no publica edad, dirección ni datos de cuenta, y el contacto de emergencia permanece oculto salvo consentimiento expreso. La clave `service_role` solo se configura en Render. Las migraciones nuevas y el bucket deben aplicarse en cada entorno antes de habilitar estas funciones.
+
+Para recrear el despliegue en servicios externos se añadieron configuraciones separadas: Vercel para la interfaz, Render para la API, Supabase para PostgreSQL y Storage, y Clerk externo para las cuentas. El Blueprint ya declara un servicio staging separado, pero debe conectarse a un proyecto Supabase y a una instancia Clerk de desarrollo independientes. La guía paso a paso está en `docs/deployment/CONFIGURACION-PLATAFORMAS.md`.
 
 ### 12.3 Arquitectura objetivo para las etapas restantes
 
 - Mantener una SPA React + TypeScript como cliente.
 - Definir primero los contratos de API y generar los tipos y hooks desde OpenAPI.
 - Extender los endpoints Express y el esquema PostgreSQL con validación, propiedad y permisos.
-- Usar almacenamiento de archivos para fotografías y documentos.
+- Usar almacenamiento privado de archivos para fotografías y documentos; las fotos de mascotas ya usan Supabase Storage.
 - Integrar un proveedor de identidad administrado adecuado al entorno; no crear almacenamiento casero de contraseñas.
 - Elegir el proveedor de mapas y fuente de GPS después de definir país, dispositivos compatibles, presupuesto y política de privacidad.
 - Mantener ubicación, reservas y datos de salud detrás de autorización del servidor.
@@ -364,8 +365,10 @@ Estas etapas quedan como guía de avance y preservan el alcance solicitado:
 
 - Implementado: Clerk para registro e inicio de sesión; cuentas y selección inicial entre tutor/proveedor.
 - Implementado: perfiles, mascotas y perfiles comerciales persistentes en PostgreSQL mediante la API.
+- Implementado inicialmente: edición de perfiles de mascota, fotografía privada y QR público limitado, con consentimiento para mostrar contacto de emergencia y revocación del QR.
 - Implementado: validación de identidad, control de permisos y propiedad de datos en el servidor; revisión administrativa de proveedores.
 - Implementado: migración inicial reproducible y configuración para separar Vercel, Render y Supabase; el despliegue externo usa una instancia Clerk independiente.
+- Preparado: servicio de API staging en Render y separación documentada de base de datos, instancia Clerk y variables de Preview. Falta crear los recursos en las consolas y configurar sus secretos.
 - Pendiente: completar políticas de retención y eliminación de cuenta, procedimientos de respaldo/restauración, migración de cuentas entre instancias Clerk y pruebas de recuperación/operación antes de producción.
 
 ### Etapa B — Ubicación real con controles de privacidad

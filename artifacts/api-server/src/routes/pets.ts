@@ -68,6 +68,7 @@ router.get("/public/pets/:token", async (req, res): Promise<void> => {
     breed: pet.breed,
     photoUrl: pet.photoPath ? await getPetPhotoUrl(pet.photoPath) : null,
     emergencyContact: pet.shareEmergencyContact ? pet.emergencyContact : null,
+    isLost: pet.status === "lost",
   };
   res.setHeader("Cache-Control", "no-store");
   res.json(GetPublicPetResponse.parse(profile));

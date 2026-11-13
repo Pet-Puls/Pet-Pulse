@@ -15,6 +15,7 @@ export default function PublicHomePage() {
 
   return <div className="public-shell">
     <header className="public-nav"><Brand /><nav className="public-nav-actions" aria-label="Acceso">
+      <Link className="public-link" href="/directory">Proveedores</Link>
       <Link className="public-link" href="/map">Mapa cercano</Link>
       {isLoaded && isSignedIn ? <ActionLink href="/workspace">Ir a mi espacio <ArrowRight size={15}/></ActionLink> : <>
         <Link className="public-link" href="/sign-in">Iniciar sesión</Link>

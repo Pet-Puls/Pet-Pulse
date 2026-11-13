@@ -15,4 +15,5 @@ export interface PublicPetProfile {
   photoUrl: string | null;
   /** @nullable */
   emergencyContact: string | null;
+  isLost: boolean;
 }

@@ -3,6 +3,7 @@ services:
     name: pet-pulse-api
     runtime: node
     plan: free
+    branch: main
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
     startCommand: pnpm --filter @workspace/api-server run start
     healthCheckPath: /api/healthz
@@ -31,3 +32,47 @@ services:
         sync: false
       - key: PETPULSE_ADMIN_EMAILS
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_PET_PHOTOS_BUCKET
+        value: pet-photos
+
+  - type: web
+    name: pet-pulse-api-staging
+    runtime: node
+    plan: free
+    branch: thomas
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+    startCommand: pnpm --filter @workspace/api-server run start
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: CLERK_AUTH_MODE
+        value: external
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_POOL_MAX
+        value: "5"
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL_CA
+        sync: false
+      - key: CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: ALLOWED_WEB_ORIGINS
+        sync: false
+      - key: PETPULSE_ADMIN_EMAILS
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_PET_PHOTOS_BUCKET
+        value: pet-photos

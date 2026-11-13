@@ -240,19 +240,42 @@ export const GetPublicPetResponse = zod.object({
   "species": zod.string(),
   "breed": zod.string().nullable(),
   "photoUrl": zod.string().url().nullable(),
-  "emergencyContact": zod.string().nullable()
+  "emergencyContact": zod.string().nullable(),
+  "isLost": zod.boolean()
 })
 
 
 /**
  * @summary Get the current provider's business profile
  */
+export const getProviderProfileResponseOneWebsiteUrlMax = 500;
+
+
+export const getProviderProfileResponseOneWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneInstagramUrlMax = 500;
+
+
+export const getProviderProfileResponseOneInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneFacebookUrlMax = 500;
+
+
+export const getProviderProfileResponseOneFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneWhatsappUrlMax = 500;
+
+
+export const getProviderProfileResponseOneWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const GetProviderProfileResponse = zod.union([zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(getProviderProfileResponseOneWebsiteUrlMax).regex(getProviderProfileResponseOneWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(getProviderProfileResponseOneInstagramUrlMax).regex(getProviderProfileResponseOneInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(getProviderProfileResponseOneFacebookUrlMax).regex(getProviderProfileResponseOneFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(getProviderProfileResponseOneWhatsappUrlMax).regex(getProviderProfileResponseOneWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -268,14 +291,52 @@ export const saveProviderProfileBodyNeighborhoodMax = 120;
 
 export const saveProviderProfileBodyDescriptionMax = 1000;
 
+export const saveProviderProfileBodyWebsiteUrlMax = 500;
+
+
+export const saveProviderProfileBodyWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyInstagramUrlMax = 500;
+
+
+export const saveProviderProfileBodyInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyFacebookUrlMax = 500;
+
+
+export const saveProviderProfileBodyFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyWhatsappUrlMax = 500;
+
+
+export const saveProviderProfileBodyWhatsappUrlRegExp = new RegExp('^https:[/][/]');
 
 
 export const SaveProviderProfileBody = zod.object({
   "name": zod.string().min(1).max(saveProviderProfileBodyNameMax),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string().min(1).max(saveProviderProfileBodyNeighborhoodMax),
-  "description": zod.string().max(saveProviderProfileBodyDescriptionMax).nullish()
+  "description": zod.string().max(saveProviderProfileBodyDescriptionMax).nullish(),
+  "websiteUrl": zod.string().url().max(saveProviderProfileBodyWebsiteUrlMax).regex(saveProviderProfileBodyWebsiteUrlRegExp).nullish(),
+  "instagramUrl": zod.string().url().max(saveProviderProfileBodyInstagramUrlMax).regex(saveProviderProfileBodyInstagramUrlRegExp).nullish(),
+  "facebookUrl": zod.string().url().max(saveProviderProfileBodyFacebookUrlMax).regex(saveProviderProfileBodyFacebookUrlRegExp).nullish(),
+  "whatsappUrl": zod.string().url().max(saveProviderProfileBodyWhatsappUrlMax).regex(saveProviderProfileBodyWhatsappUrlRegExp).nullish()
 })
+
+export const saveProviderProfileResponseWebsiteUrlMax = 500;
+
+
+export const saveProviderProfileResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseInstagramUrlMax = 500;
+
+
+export const saveProviderProfileResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseFacebookUrlMax = 500;
+
+
+export const saveProviderProfileResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseWhatsappUrlMax = 500;
+
+
+export const saveProviderProfileResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
 
 export const SaveProviderProfileResponse = zod.object({
   "id": zod.string().uuid(),
@@ -283,9 +344,72 @@ export const SaveProviderProfileResponse = zod.object({
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(saveProviderProfileResponseWebsiteUrlMax).regex(saveProviderProfileResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(saveProviderProfileResponseInstagramUrlMax).regex(saveProviderProfileResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(saveProviderProfileResponseFacebookUrlMax).regex(saveProviderProfileResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(saveProviderProfileResponseWhatsappUrlMax).regex(saveProviderProfileResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List approved providers in the public directory
+ */
+export const listPublicProvidersQueryQMax = 120;
+
+export const listPublicProvidersQueryPageDefault = 1;
+
+export const listPublicProvidersQueryPageSizeDefault = 12;
+export const listPublicProvidersQueryPageSizeMax = 50;
+
+
+
+export const ListPublicProvidersQueryParams = zod.object({
+  "q": zod.coerce.string().min(1).max(listPublicProvidersQueryQMax).optional(),
+  "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']).optional(),
+  "page": zod.coerce.number().int().min(1).default(listPublicProvidersQueryPageDefault),
+  "pageSize": zod.coerce.number().int().min(1).max(listPublicProvidersQueryPageSizeMax).default(listPublicProvidersQueryPageSizeDefault)
+})
+
+export const listPublicProvidersResponseItemsItemWebsiteUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemInstagramUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemFacebookUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemWhatsappUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseTotalMin = 0;
+
+
+
+
+
+export const ListPublicProvidersResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
+  "neighborhood": zod.string(),
+  "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(listPublicProvidersResponseItemsItemWebsiteUrlMax).regex(listPublicProvidersResponseItemsItemWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(listPublicProvidersResponseItemsItemInstagramUrlMax).regex(listPublicProvidersResponseItemsItemInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(listPublicProvidersResponseItemsItemFacebookUrlMax).regex(listPublicProvidersResponseItemsItemFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(listPublicProvidersResponseItemsItemWhatsappUrlMax).regex(listPublicProvidersResponseItemsItemWhatsappUrlRegExp).nullable()
+})),
+  "total": zod.number().int().min(listPublicProvidersResponseTotalMin),
+  "page": zod.number().int().min(1),
+  "pageSize": zod.number().int().min(1)
 })
 
 
@@ -317,12 +441,34 @@ export const ListAdminProvidersQueryParams = zod.object({
   "status": zod.enum(['pending', 'approved', 'suspended']).optional()
 })
 
+export const listAdminProvidersResponseWebsiteUrlMax = 500;
+
+
+export const listAdminProvidersResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseInstagramUrlMax = 500;
+
+
+export const listAdminProvidersResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseFacebookUrlMax = 500;
+
+
+export const listAdminProvidersResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseWhatsappUrlMax = 500;
+
+
+export const listAdminProvidersResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const ListAdminProvidersResponseItem = zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(listAdminProvidersResponseWebsiteUrlMax).regex(listAdminProvidersResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(listAdminProvidersResponseInstagramUrlMax).regex(listAdminProvidersResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(listAdminProvidersResponseFacebookUrlMax).regex(listAdminProvidersResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(listAdminProvidersResponseWhatsappUrlMax).regex(listAdminProvidersResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -341,12 +487,34 @@ export const UpdateProviderApprovalBody = zod.object({
   "approvalStatus": zod.enum(['approved', 'suspended'])
 })
 
+export const updateProviderApprovalResponseWebsiteUrlMax = 500;
+
+
+export const updateProviderApprovalResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseInstagramUrlMax = 500;
+
+
+export const updateProviderApprovalResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseFacebookUrlMax = 500;
+
+
+export const updateProviderApprovalResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseWhatsappUrlMax = 500;
+
+
+export const updateProviderApprovalResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const UpdateProviderApprovalResponse = zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(updateProviderApprovalResponseWebsiteUrlMax).regex(updateProviderApprovalResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(updateProviderApprovalResponseInstagramUrlMax).regex(updateProviderApprovalResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(updateProviderApprovalResponseFacebookUrlMax).regex(updateProviderApprovalResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(updateProviderApprovalResponseWhatsappUrlMax).regex(updateProviderApprovalResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

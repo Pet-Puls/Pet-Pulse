@@ -106,6 +106,37 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .proof-intro { font:700 21px var(--app-font-display);letter-spacing:-.04em; }.proof-item { border-left:1px solid #d8decf;padding:8px 0 8px 20px;color:#72857a;font-size:12px;line-height:1.5; }.proof-item strong { display:block;color:#315c50;font-size:13px;margin-bottom:4px; }
 .public-section { max-width:1240px;margin:0 auto;padding:0 5vw 96px; }.public-section-head { max-width:540px;margin-bottom:28px; }.public-section-head h2 { font:700 clamp(30px,4vw,46px)/1.05 var(--app-font-display);letter-spacing:-.06em;color:#214b42; }.care-grid { display:grid;grid-template-columns:1.15fr .85fr;gap:18px; }.care-feature { min-height:280px;border-radius:24px;padding:30px;background:#214f46;color:#f7f2df;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden; }.care-feature:after { content:"";position:absolute;width:270px;height:270px;border-radius:50%;border:1px solid #ffffff30;right:-35px;bottom:-150px;box-shadow:0 0 0 28px #ffffff08,0 0 0 58px #ffffff08; }.care-feature h3 { font:700 28px var(--app-font-display);max-width:340px; }.care-feature p { color:#d1ded2;max-width:400px;line-height:1.65;font-size:13px; }.care-aside { display:grid;gap:18px; }.care-tile { border-radius:22px;padding:24px;background:#e9eadd;display:flex;flex-direction:column;justify-content:space-between;min-height:130px; }.care-tile:nth-child(2){background:#f0ddc1}.care-tile h3 { color:#2c584e;font:700 20px var(--app-font-display); }.care-tile p { color:#728178;font-size:12px;line-height:1.5;margin:0; }
 .public-footer { border-top:1px solid #e0e2d6;max-width:1240px;margin:auto;padding:24px 5vw 35px;display:flex;justify-content:space-between;color:#829087;font-size:11px; }
+.directory-page { width:min(1120px,100%); margin:0 auto; padding:56px 5vw 80px; }
+.directory-heading { max-width:700px; margin-bottom:30px; }
+.directory-heading h1 { margin:10px 0; color:#214b42; font-size:clamp(34px,5vw,54px); line-height:1.04; letter-spacing:-.06em; }
+.directory-heading p { max-width:560px; color:#718078; font-size:15px; line-height:1.6; }
+.directory-filters { display:grid; grid-template-columns:minmax(0,1fr) minmax(210px,.35fr); gap:12px; margin-bottom:18px; }
+.directory-search,.directory-category select { min-height:48px; display:flex; align-items:center; gap:10px; padding:0 14px; border:1px solid #dfe3d8; border-radius:12px; background:#fffefa; color:#638174; }
+.directory-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#294b42; }
+.directory-search input:focus-visible { outline:0; }
+.directory-category select { width:100%; color:#294b42; }
+.directory-result-count { margin:0 0 12px; color:#718078; font-size:12px; }
+.directory-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; }
+.directory-card { min-width:0; display:flex; flex-direction:column; align-items:flex-start; padding:20px; border:1px solid #e8e5d9; border-radius:18px; background:#fffdf7; box-shadow:0 8px 25px #435b440a; }
+.directory-card-top { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.directory-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:14px; background:#e9eddf; color:#286354; }
+.directory-approved { display:flex; align-items:center; gap:5px; color:#447b5b; font-size:11px; font-weight:700; }
+.directory-card .account-kicker { margin-bottom:6px; }
+.directory-card h2 { margin:0 0 9px; color:#285247; font:700 20px/1.2 var(--app-font-display); overflow-wrap:anywhere; }
+.directory-neighborhood { display:flex; align-items:center; gap:6px; margin:0 0 10px; color:#718078; font-size:12px; }
+.directory-description { flex:1; color:#65796e; font-size:13px; line-height:1.55; white-space:pre-line; }
+.directory-provider-links { display:flex; flex-wrap:wrap; gap:7px 12px; margin:4px 0 14px; }
+.directory-provider-links a { display:inline-flex; align-items:center; gap:4px; color:#286354; font-size:11px; font-weight:700; text-decoration:none; }
+.directory-provider-links a:hover { text-decoration:underline; }
+.directory-card > .account-button { margin-top:auto; }
+.directory-loading { max-width:600px; margin:20px auto; }
+.directory-empty { padding:55px 20px; border:1px dashed #cbd6c9; border-radius:18px; color:#638174; text-align:center; }
+.directory-empty h2 { margin:12px 0 6px; color:#285247; font:700 22px var(--app-font-display); }
+.directory-empty p { margin:0; color:#718078; font-size:13px; }
+.directory-pagination { display:flex; align-items:center; justify-content:center; gap:15px; margin-top:24px; color:#718078; font-size:12px; }
+.directory-pagination button { min-width:100px; }
+@media(max-width:800px) { .directory-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:560px) { .directory-page { padding:34px 18px 60px; }.directory-heading { margin-bottom:22px; }.directory-heading h1 { font-size:38px; }.directory-filters,.directory-grid { grid-template-columns:1fr; }.directory-card { padding:18px; }.directory-pagination { gap:8px; }.directory-pagination button { min-width:0; } }
 .account-layout { min-height:100dvh;background:#f4f2e9;display:grid;grid-template-columns:280px minmax(0,1fr);color:#274c43; }
 .account-side { background:#214f46;color:#eaf1e5;padding:26px 19px;display:flex;flex-direction:column; }
 .account-side .public-brand { color:#f6f0dc;padding:3px 8px 42px; }
@@ -186,6 +217,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .pet-qr-dialog .modal-head { text-align:left; }
 .pet-qr-code { width:max-content; max-width:100%; margin:0 auto 15px; padding:12px; background:white; border:1px solid #e8e5d9; border-radius:12px; }
 .pet-qr-dialog .account-form-actions { justify-content:center; margin-top:18px; }
+.pet-qr-share-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:14px; }
 .public-pet-page { min-height:100dvh; display:grid; align-content:start; justify-items:center; gap:20px; padding:30px 18px; background:#f4f2e9; }
 .public-pet-header { width:min(520px,100%); }
 .public-pet-card { width:min(520px,100%); padding:28px; border:1px solid #e8e5d9; border-radius:22px; background:#fffdf7; box-shadow:0 20px 60px #394f3614; text-align:center; }
@@ -194,6 +226,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .public-pet-photo img { width:100%; height:100%; object-fit:cover; }
 .public-pet-species { margin:0 0 18px; color:#718078; font-size:14px; }
 .public-pet-contact { margin:18px 0; text-align:left; }
+.public-pet-lost { margin:18px 0; text-align:left; border-color:#e9c4a8; background:#fff0e4; color:#8a4828; }
 .public-pet-card .map-privacy-note { margin:16px 0; }
 @media(max-width:560px){.pet-profile-actions .account-button{flex:1}.public-pet-card{padding:22px}.pet-photo-picker{min-height:145px}}
 

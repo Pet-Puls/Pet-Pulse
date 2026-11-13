@@ -118,6 +118,20 @@ Vuelve a desplegar Vercel. La web antepone ese origen a las rutas `/api/...` y s
 - Confirma que rutas como `/map` y `/demo` conservan la demostración aislada.
 - En las herramientas de red, comprueba que las llamadas a la API van a Render y llevan el token de sesión; no deben incluir claves secretas.
 
+## 7. Puerta de salida de staging
+
+Completa esta validación en proyectos de Clerk, Supabase, Render y Vercel separados de producción, con cuentas y datos ficticios. No pegues secretos en tickets, consola compartida ni archivos versionados.
+
+1. **Base de datos:** confirma el proyecto y la rama antes de ejecutar migraciones. En una base aislada vacía, ejecuta `pnpm --filter @workspace/db run migrate` y comprueba perfiles, mascotas y proveedores. Repite el comando para verificar que Drizzle no vuelve a aplicar migraciones registradas. En un segundo staging con el esquema previo, aplica las migraciones pendientes y comprueba que los datos de prueba existentes siguen disponibles. No uses `push-force`.
+2. **Fotos:** crea `pet-photos` como bucket privado. Sube y consulta una imagen válida; intenta abrir el objeto sin autorización y con otra cuenta, y confirma que se deniega. Verifica también rechazo de formato inválido y archivos de más de 5 MB.
+3. **Identidad y permisos:** prueba alta e inicio de sesión con Clerk, onboarding de tutor y proveedor, acceso administrativo solo desde correo verificado autorizado, y denegación de rutas al rol incorrecto.
+4. **Datos de mascotas:** con dos tutores, confirma que cada uno solo puede consultar, editar y borrar sus mascotas. Genera un QR, comprueba los campos públicos y el consentimiento de contacto, revócalo y verifica que el enlace deje de responder.
+5. **Proveedores:** guarda enlaces HTTPS válidos, intenta dominios sociales incorrectos, y confirma que cualquier edición vuelve a pendiente. El directorio debe mostrar solo perfiles aprobados y sus enlaces.
+6. **Web y operación:** confirma CORS solo para los dominios previstos, rutas directas de la SPA, mensajes de error/reintento, logs sin tokens ni datos personales innecesarios, y alertas para errores 5xx o falta de salud.
+7. **Recuperación y aprobación:** realiza un backup de staging y ensaya su restauración en otra base aislada. Registra evidencia y responsable para cada paso; solo promueve a producción cuando todos los P0 pasan y se aprueban el plan, los costos, la privacidad y la recuperación.
+
+El comando de migración se ejecuta manualmente contra el destino confirmado; este documento no autoriza ni ejecuta cambios remotos. Las pruebas automatizadas locales usan dobles de Clerk y base de datos, por lo que no reemplazan esta puerta de salida.
+
 ## Datos y migraciones de cuentas
 
 `migrate` recrea la estructura vacía de PostgreSQL; no inventa usuarios ni copia datos personales. Las cuentas de Clerk y los perfiles de aplicación están relacionados por el identificador Clerk. Al cambiar a una instancia Clerk nueva, las cuentas se registran de nuevo y los identificadores antiguos no se reasignan automáticamente.

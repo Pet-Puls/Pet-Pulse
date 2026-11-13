@@ -40,5 +40,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Run workspace tests
+        run: pnpm run test
+
       - name: Typecheck and build all workspace packages
         run: pnpm run build

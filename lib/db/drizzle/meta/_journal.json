@@ -15,6 +15,13 @@
       "when": 1794060000000,
       "tag": "0001_pet_photos_and_qr",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794585600000,
+      "tag": "0002_provider_social_links",
+      "breakpoints": true
     }
   ]
 }

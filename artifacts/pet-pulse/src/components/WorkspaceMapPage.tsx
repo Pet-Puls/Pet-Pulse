@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import * as L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
-  ExternalLink, LocateFixed, MapPin, Navigation, RefreshCw, Search,
+  ExternalLink, Flag, LocateFixed, MapPin, Navigation, RefreshCw, Search,
 } from 'lucide-react';
 import {
   categories, medellinCenter, nearbyRadiusMeters,
@@ -11,6 +11,14 @@ import type {
   Coordinates, LocationResult, NearbyPlace,
 } from '@/features/map/types';
 import { getLocationError, searchLocations, searchNearbyPlaces } from '@/features/map/map-service';
+
+function getOpenStreetMapNoteUrl(lat: number, lon: number) {
+  const url = new URL('https://www.openstreetmap.org/note/new');
+  url.searchParams.set('lat', String(lat));
+  url.searchParams.set('lon', String(lon));
+  url.hash = `map=18/${lat}/${lon}`;
+  return url.toString();
+}
 
 export default function WorkspaceMapPage() {
   const mapElement = useRef<HTMLDivElement>(null);
@@ -97,7 +105,12 @@ export default function WorkspaceMapPage() {
       name.textContent = place.name;
       const detail = document.createElement('div');
       detail.textContent = `${place.category} · ${place.distanceKm.toFixed(1)} km`;
-      popup.append(name, detail);
+      const report = document.createElement('a');
+      report.href = getOpenStreetMapNoteUrl(place.lat, place.lon);
+      report.target = '_blank';
+      report.rel = 'noopener noreferrer';
+      report.textContent = 'Reportar dato a OpenStreetMap';
+      popup.append(name, detail, report);
       marker.bindPopup(popup);
     });
   }, [center, visiblePlaces]);
@@ -295,7 +308,7 @@ export default function WorkspaceMapPage() {
               : 'Permite la ubicación del dispositivo o busca una dirección.'}
           </p>
           <p className="map-data-note">
-            Mostramos lugares registrados en OpenStreetMap. Los espacios para eventos no son una agenda de eventos actuales.
+            Actualmente el mapa muestra solo resultados externos: lugares sugeridos por OpenStreetMap, encontrados mediante Photon. PetPulse no ha confirmado que sigan abiertos ni que el pin sea exacto; verifica la información antes de desplazarte. Puedes reportar un dato incorrecto a OpenStreetMap desde cada resultado. Los espacios para eventos no son una agenda de eventos actuales.
           </p>
           <label className="account-field map-category-filter">
             <span>Filtrar por tipo</span>
@@ -317,6 +330,14 @@ export default function WorkspaceMapPage() {
                     {place.address && <small>{place.address}</small>}
                     <a href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`} target="_blank" rel="noreferrer">
                       Cómo llegar <ExternalLink size={12}/>
+                    </a>
+                    <a
+                      href={getOpenStreetMapNoteUrl(place.lat, place.lon)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Reportar ubicación incorrecta de ${place.name} a OpenStreetMap`}
+                    >
+                      <Flag size={12}/> Reportar dato incorrecto
                     </a>
                   </div>
                 </article>

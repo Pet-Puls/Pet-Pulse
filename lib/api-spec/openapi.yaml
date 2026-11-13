@@ -455,6 +455,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /providers:
+    get:
+      operationId: listPublicProviders
+      tags: [providers]
+      summary: List approved providers in the public directory
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [veterinary, daycare, walker, shelter, store, other]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
+      responses:
+        "200":
+          description: Approved provider profiles in the requested result page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProviderPage"
+        "400":
+          description: Invalid search or pagination parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /admin/overview:
     get:
       operationId: getAdminOverview
@@ -743,12 +790,15 @@ components:
           format: uri
         emergencyContact:
           type: ["string", "null"]
+        isLost:
+          type: boolean
       required:
         - name
         - species
         - breed
         - photoUrl
         - emergencyContact
+        - isLost
     ProviderProfile:
       type: object
       properties:
@@ -764,6 +814,26 @@ components:
           type: string
         description:
           type: ["string", "null"]
+        websiteUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        instagramUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        facebookUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        whatsappUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
         approvalStatus:
           type: string
           enum: [pending, approved, suspended]
@@ -779,9 +849,79 @@ components:
         - category
         - neighborhood
         - description
+        - websiteUrl
+        - instagramUrl
+        - facebookUrl
+        - whatsappUrl
         - approvalStatus
         - createdAt
         - updatedAt
+    PublicProviderProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+          enum: [veterinary, daycare, walker, shelter, store, other]
+        neighborhood:
+          type: string
+        description:
+          type: ["string", "null"]
+        websiteUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        instagramUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        facebookUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        whatsappUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+      required:
+        - id
+        - name
+        - category
+        - neighborhood
+        - description
+        - websiteUrl
+        - instagramUrl
+        - facebookUrl
+        - whatsappUrl
+    PublicProviderPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicProviderProfile"
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+      required:
+        - items
+        - total
+        - page
+        - pageSize
     ProviderProfileInput:
       type: object
       properties:
@@ -799,6 +939,26 @@ components:
         description:
           type: ["string", "null"]
           maxLength: 1000
+        websiteUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        instagramUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        facebookUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
+        whatsappUrl:
+          type: ["string", "null"]
+          format: uri
+          pattern: "^https:[/][/]"
+          maxLength: 500
       required:
         - name
         - category

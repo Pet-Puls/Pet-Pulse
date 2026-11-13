@@ -173,6 +173,7 @@ export interface PublicPetProfile {
   photoUrl: string | null;
   /** @nullable */
   emergencyContact: string | null;
+  isLost: boolean;
 }
 
 export type ProviderProfileCategory = typeof ProviderProfileCategory[keyof typeof ProviderProfileCategory];
@@ -203,9 +204,88 @@ export interface ProviderProfile {
   neighborhood: string;
   /** @nullable */
   description: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl: string | null;
   approvalStatus: ProviderProfileApprovalStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export type PublicProviderProfileCategory = typeof PublicProviderProfileCategory[keyof typeof PublicProviderProfileCategory];
+
+
+export const PublicProviderProfileCategory = {
+  veterinary: 'veterinary',
+  daycare: 'daycare',
+  walker: 'walker',
+  shelter: 'shelter',
+  store: 'store',
+  other: 'other',
+} as const;
+
+export interface PublicProviderProfile {
+  id: string;
+  name: string;
+  category: PublicProviderProfileCategory;
+  neighborhood: string;
+  /** @nullable */
+  description: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl: string | null;
+}
+
+export interface PublicProviderPage {
+  items: PublicProviderProfile[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  /** @minimum 1 */
+  pageSize: number;
 }
 
 export type ProviderProfileInputCategory = typeof ProviderProfileInputCategory[keyof typeof ProviderProfileInputCategory];
@@ -237,6 +317,30 @@ export interface ProviderProfileInput {
      * @nullable
      */
   description?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl?: string | null;
 }
 
 export type ProviderApprovalInputApprovalStatus = typeof ProviderApprovalInputApprovalStatus[keyof typeof ProviderApprovalInputApprovalStatus];
@@ -261,6 +365,36 @@ export interface AdminOverview {
   /** @minimum 0 */
   pendingProviders: number;
 }
+
+export type ListPublicProvidersParams = {
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+q?: string;
+category?: ListPublicProvidersCategory;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+pageSize?: number;
+};
+
+export type ListPublicProvidersCategory = typeof ListPublicProvidersCategory[keyof typeof ListPublicProvidersCategory];
+
+
+export const ListPublicProvidersCategory = {
+  veterinary: 'veterinary',
+  daycare: 'daycare',
+  walker: 'walker',
+  shelter: 'shelter',
+  store: 'store',
+  other: 'other',
+} as const;
 
 export type ListAdminProvidersParams = {
 status?: ListAdminProvidersStatus;

@@ -3,13 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./public-providers": "./src/public-providers.ts"
   },
   "dependencies": {
-    "@tanstack/react-query": "catalog:"
+    "@tanstack/react-query": "catalog:",
+    "@workspace/api-zod": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18"
+  },
+  "devDependencies": {
+    "vitest": "^5.1.0"
   }
 }

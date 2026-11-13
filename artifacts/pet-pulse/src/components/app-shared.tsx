@@ -41,6 +41,7 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
   const nav = [
     { href: '/workspace', label: 'Resumen', icon: Home },
     { href: '/workspace/map', label: 'Mapa', icon: MapPin },
+    { href: '/directory', label: 'Directorio', icon: Store },
     ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mascotas', icon: PawPrint }] : []),
     ...(me.role === 'provider' ? [{ href: '/workspace/provider', label: 'Mi perfil', icon: Store }] : []),
     ...(me.role === 'admin' ? [{ href: '/workspace/admin', label: 'Admin', icon: ShieldCheck }] : []),

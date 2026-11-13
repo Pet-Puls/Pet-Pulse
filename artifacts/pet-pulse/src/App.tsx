@@ -4,7 +4,6 @@ import {
   QueryClientProvider, useQueryClient,
 } from '@tanstack/react-query';
 import { Redirect, Route, Router as WouterRouter, Switch, useLocation } from 'wouter';
-import { DemoApp } from './DemoApp';
 import { ApiAuthBridge } from '@/app/auth';
 import {
   clerkAppearance, clerkLocalization, clerkProxyUrl, clerkPubKey, basePath,
@@ -12,18 +11,21 @@ import {
 } from '@/app/config';
 import { LoadingPanel, PrivateRoute } from '@/components/app-shared';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import AdminPage from '@/pages/AdminPage';
-import { SignInPage, SignUpPage } from '@/pages/AuthPages';
-import OnboardingPage from '@/pages/OnboardingPage';
-import PetsPage from '@/pages/PetsPage';
 import PublicHomePage from '@/pages/PublicHomePage';
-import ProviderPage from '@/pages/ProviderPage';
-import PublicPetPage from '@/pages/PublicPetPage';
-import WorkspaceHomePage from '@/pages/WorkspaceHomePage';
 import NotFound from '@/pages/not-found';
 import { Toaster } from '@/components/ui/toaster';
 import '@/index.css';
 
+const DemoApp = lazy(() => import('./DemoApp').then(module => ({ default: module.DemoApp })));
+const AdminPage = lazy(() => import('@/pages/AdminPage'));
+const DirectoryPage = lazy(() => import('@/pages/DirectoryPage'));
+const SignInPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignInPage })));
+const SignUpPage = lazy(() => import('@/pages/AuthPages').then(module => ({ default: module.SignUpPage })));
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
+const PetsPage = lazy(() => import('@/pages/PetsPage'));
+const ProviderPage = lazy(() => import('@/pages/ProviderPage'));
+const PublicPetPage = lazy(() => import('@/pages/PublicPetPage'));
+const WorkspaceHomePage = lazy(() => import('@/pages/WorkspaceHomePage'));
 const WorkspaceMapPage = lazy(() => import('./components/WorkspaceMapPage'));
 
 function ClerkQueryClientCacheInvalidator() {
@@ -43,8 +45,8 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function MapLoadingState() {
-  return <main className="account-content"><LoadingPanel label="Cargando el mapa…"/></main>;
+function RouteLoadingState() {
+  return <main className="account-content"><LoadingPanel label="Preparando esta sección…"/></main>;
 }
 
 function RouterContent() {
@@ -62,7 +64,7 @@ function RouterContent() {
   >
     <QueryClientProvider client={queryClient}>
       <ClerkQueryClientCacheInvalidator/>
-      <ApiAuthBridge><TooltipProvider><Switch>
+      <ApiAuthBridge><TooltipProvider><Suspense fallback={<RouteLoadingState/>}><Switch>
         <Route path="/" component={PublicHomePage}/>
         <Route path="/sign-in/*?" component={SignInPage}/>
         <Route path="/sign-up/*?" component={SignUpPage}/>
@@ -70,17 +72,17 @@ function RouterContent() {
         <Route path="/pet/:token">{params => <PublicPetPage token={params.token}/>}</Route>
         <Route path="/onboarding" component={OnboardingPage}/>
         <Route path="/workspace"><PrivateRoute>{me => <WorkspaceHomePage me={me}/>}</PrivateRoute></Route>
-        <Route path="/workspace/map"><PrivateRoute>{() => <Suspense fallback={<MapLoadingState/>}><WorkspaceMapPage/></Suspense>}</PrivateRoute></Route>
+        <Route path="/workspace/map"><PrivateRoute>{() => <WorkspaceMapPage/>}</PrivateRoute></Route>
         <Route path="/workspace/pets"><PrivateRoute role="owner">{() => <PetsPage/>}</PrivateRoute></Route>
         <Route path="/workspace/provider"><PrivateRoute role="provider">{() => <ProviderPage/>}</PrivateRoute></Route>
         <Route path="/workspace/admin"><PrivateRoute role="admin">{() => <AdminPage/>}</PrivateRoute></Route>
-        <Route path="/map"><Suspense fallback={<MapLoadingState/>}><WorkspaceMapPage/></Suspense></Route>
+        <Route path="/map" component={WorkspaceMapPage}/>
+        <Route path="/directory" component={DirectoryPage}/>
         <Route path="/pets"><Redirect to="/demo/pets"/></Route>
-        <Route path="/directory"><Redirect to="/demo/directory"/></Route>
         <Route path="/services"><Redirect to="/demo/services"/></Route>
         <Route path="/admin"><Redirect to="/demo/admin"/></Route>
         <Route><NotFound/></Route>
-      </Switch><Toaster/></TooltipProvider></ApiAuthBridge>
+      </Switch></Suspense><Toaster/></TooltipProvider></ApiAuthBridge>
     </QueryClientProvider>
   </ClerkProvider>;
 }

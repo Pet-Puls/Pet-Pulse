@@ -7,7 +7,7 @@ import {
 } from '@workspace/api-client-react';
 import type { ProviderProfile } from '@workspace/api-client-react';
 import { ErrorPanel, LoadingPanel, PageHeading, errorMessage } from '@/components/app-shared';
-import { providerCategories } from './ProviderPage';
+import { getProviderCategoryLabel } from '@/features/providers';
 
 export default function AdminPage() {
   const client = useQueryClient();
@@ -17,6 +17,7 @@ export default function AdminPage() {
   const updateApproval = useUpdateProviderApproval({ mutation: { onSuccess: () => {
     void client.invalidateQueries({ queryKey: getGetAdminOverviewQueryKey() });
     void client.invalidateQueries({ queryKey: getListAdminProvidersQueryKey() });
+    void client.invalidateQueries({ queryKey: ['public-providers'] });
   } } });
   const setStatus = (profile: ProviderProfile, approvalStatus: 'approved' | 'suspended') => updateApproval.mutate({ providerId: profile.id, data: { approvalStatus } });
 
@@ -32,7 +33,7 @@ export default function AdminPage() {
       {updateApproval.isError && <div className="error-box" style={{ marginBottom: 12 }} role="alert">{errorMessage(updateApproval.error)}</div>}
       {providers.isLoading ? <LoadingPanel label="Cargando solicitudes…"/> : providers.isError ? <ErrorPanel message={errorMessage(providers.error)} retry={() => void providers.refetch()}/> :
         providers.data?.length ? providers.data.map(profile => <article key={profile.id} className="admin-row">
-          <div><h3>{profile.name}</h3><p><MapPin size={12} style={{ verticalAlign: 'middle' }}/> {profile.neighborhood} · {providerCategories.find(([key]) => key === profile.category)?.[1] || profile.category}</p>{profile.description && <p>{profile.description}</p>}<span className={`provider-status ${profile.approvalStatus}`}>{profile.approvalStatus === 'approved' ? 'Aprobado' : profile.approvalStatus === 'suspended' ? 'Suspendido' : 'Pendiente'}</span></div>
+          <div><h3>{profile.name}</h3><p><MapPin size={12} style={{ verticalAlign: 'middle' }}/> {profile.neighborhood} · {getProviderCategoryLabel(profile.category)}</p>{profile.description && <p>{profile.description}</p>}<span className={`provider-status ${profile.approvalStatus}`}>{profile.approvalStatus === 'approved' ? 'Aprobado' : profile.approvalStatus === 'suspended' ? 'Suspendido' : 'Pendiente'}</span></div>
           <div className="admin-actions">{filter !== 'approved' && <button className="account-button tiny" disabled={updateApproval.isPending} onClick={() => setStatus(profile, 'approved')}><Check size={13}/> Aprobar</button>}{filter !== 'suspended' && <button className="account-button danger tiny" disabled={updateApproval.isPending} onClick={() => setStatus(profile, 'suspended')}><X size={13}/> Suspender</button>}</div>
         </article>) : <div className="empty-box"><ClipboardList size={28}/><h3>No hay perfiles {filter === 'pending' ? 'pendientes' : filter === 'approved' ? 'aprobados' : 'suspendidos'}</h3><p>Cuando haya perfiles en este estado, aparecerán aquí.</p></div>}
     </section>
