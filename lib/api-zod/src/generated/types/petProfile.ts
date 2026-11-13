@@ -17,6 +17,10 @@ export interface PetProfile {
   age: string | null;
   /** @nullable */
   emergencyContact: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  qrEnabled: boolean;
+  shareEmergencyContact: boolean;
   status: PetProfileStatus;
   createdAt: Date;
   updatedAt: Date;

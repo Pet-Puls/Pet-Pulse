@@ -12,5 +12,4 @@ export type PetUpdateStatus = typeof PetUpdateStatus[keyof typeof PetUpdateStatu
 export const PetUpdateStatus = {
   home: 'home',
   walking: 'walking',
-  lost: 'lost',
 } as const;

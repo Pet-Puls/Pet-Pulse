@@ -1,5 +1,4 @@
 import { defineConfig } from "drizzle-kit";
-import path from "path";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
@@ -19,8 +18,8 @@ function sslFromEnv() {
 const url = new URL(process.env.DATABASE_URL);
 
 export default defineConfig({
-  schema: path.join(__dirname, "./src/schema/index.ts"),
-  out: path.join(__dirname, "./drizzle"),
+  schema: "./src/schema/*.ts",
+  out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
     host: url.hostname,

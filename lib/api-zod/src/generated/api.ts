@@ -59,6 +59,49 @@ export const CompleteOnboardingResponse = zod.object({
 
 
 /**
+ * @summary Get the current account's WhatsApp notification preferences
+ */
+export const getNotificationPreferencesResponsePhoneNumberMax = 16;
+
+
+export const getNotificationPreferencesResponsePhoneNumberRegExp = new RegExp('^\\+[1-9][0-9]{1,14}$');
+
+
+export const GetNotificationPreferencesResponse = zod.object({
+  "phoneNumber": zod.string().max(getNotificationPreferencesResponsePhoneNumberMax).regex(getNotificationPreferencesResponsePhoneNumberRegExp).nullable(),
+  "whatsappOptIn": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Save a separate phone number and explicit WhatsApp consent
+ */
+export const saveNotificationPreferencesBodyPhoneNumberMax = 16;
+
+
+export const saveNotificationPreferencesBodyPhoneNumberRegExp = new RegExp('^\\+[1-9][0-9]{1,14}$');
+
+
+export const SaveNotificationPreferencesBody = zod.object({
+  "phoneNumber": zod.string().max(saveNotificationPreferencesBodyPhoneNumberMax).regex(saveNotificationPreferencesBodyPhoneNumberRegExp).nullable(),
+  "whatsappOptIn": zod.boolean()
+})
+
+export const saveNotificationPreferencesResponsePhoneNumberMax = 16;
+
+
+export const saveNotificationPreferencesResponsePhoneNumberRegExp = new RegExp('^\\+[1-9][0-9]{1,14}$');
+
+
+export const SaveNotificationPreferencesResponse = zod.object({
+  "phoneNumber": zod.string().max(saveNotificationPreferencesResponsePhoneNumberMax).regex(saveNotificationPreferencesResponsePhoneNumberRegExp).nullable(),
+  "whatsappOptIn": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary List the current owner's pets
  */
 export const ListPetsResponseItem = zod.object({
@@ -68,6 +111,9 @@ export const ListPetsResponseItem = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -95,7 +141,8 @@ export const CreatePetBody = zod.object({
   "species": zod.string().min(1).max(createPetBodySpeciesMax),
   "breed": zod.string().max(createPetBodyBreedMax).nullish(),
   "age": zod.string().max(createPetBodyAgeMax).nullish(),
-  "emergencyContact": zod.string().max(createPetBodyEmergencyContactMax).nullish()
+  "emergencyContact": zod.string().max(createPetBodyEmergencyContactMax).nullish(),
+  "shareEmergencyContact": zod.boolean().optional()
 })
 
 export const CreatePetResponse = zod.object({
@@ -105,6 +152,9 @@ export const CreatePetResponse = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -136,7 +186,8 @@ export const UpdatePetBody = zod.object({
   "breed": zod.string().max(updatePetBodyBreedMax).nullish(),
   "age": zod.string().max(updatePetBodyAgeMax).nullish(),
   "emergencyContact": zod.string().max(updatePetBodyEmergencyContactMax).nullish(),
-  "status": zod.enum(['home', 'walking', 'lost']).optional()
+  "shareEmergencyContact": zod.boolean().optional(),
+  "status": zod.enum(['home', 'walking']).optional()
 })
 
 export const UpdatePetResponse = zod.object({
@@ -146,6 +197,9 @@ export const UpdatePetResponse = zod.object({
   "breed": zod.string().nullable(),
   "age": zod.string().nullable(),
   "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
   "status": zod.enum(['home', 'walking', 'lost']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -163,14 +217,224 @@ export const DeletePetResponse = zod.void()
 
 
 /**
+ * @summary List active reports visible to members and reports owned by the current user
+ */
+export const ListLostPetReportsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+export const ListLostPetReportsResponse = zod.array(ListLostPetReportsResponseItem)
+
+
+/**
+ * @summary Create a consented, member-only lost-pet report that expires after 72 hours
+ */
+export const CreateLostPetReportParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const createLostPetReportBodyLocationDescriptionMin = 2;
+export const createLostPetReportBodyLocationDescriptionMax = 160;
+
+export const createLostPetReportBodyNotesMax = 500;
+
+
+
+export const CreateLostPetReportBody = zod.object({
+  "locationDescription": zod.string().min(createLostPetReportBodyLocationDescriptionMin).max(createLostPetReportBodyLocationDescriptionMax),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().max(createLostPetReportBodyNotesMax).nullish(),
+  "consentToShareLocation": zod.boolean()
+})
+
+export const CreateLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+
+
+/**
+ * @summary Close a lost-pet report owned by the current user
+ */
+export const CloseLostPetReportParams = zod.object({
+  "reportId": zod.coerce.string().uuid()
+})
+
+export const CloseLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+
+
+/**
+ * @summary Renew an active or expired report for another 72 hours with renewed consent
+ */
+export const RenewLostPetReportParams = zod.object({
+  "reportId": zod.coerce.string().uuid()
+})
+
+export const renewLostPetReportBodyLocationDescriptionMin = 2;
+export const renewLostPetReportBodyLocationDescriptionMax = 160;
+
+export const renewLostPetReportBodyNotesMax = 500;
+
+
+
+export const RenewLostPetReportBody = zod.object({
+  "locationDescription": zod.string().min(renewLostPetReportBodyLocationDescriptionMin).max(renewLostPetReportBodyLocationDescriptionMax),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().max(renewLostPetReportBodyNotesMax).nullish(),
+  "consentToShareLocation": zod.boolean()
+})
+
+export const RenewLostPetReportResponse = zod.object({
+  "id": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "petName": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "locationDescription": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "notes": zod.string().nullable(),
+  "expiresAt": zod.coerce.date(),
+  "status": zod.enum(['active', 'closed', 'expired']),
+  "canManage": zod.boolean()
+})
+
+
+/**
+ * @summary Upload or replace a pet's private photo
+ */
+export const UploadPetPhotoParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const UploadPetPhotoResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "age": zod.string().nullable(),
+  "emergencyContact": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "qrEnabled": zod.boolean(),
+  "shareEmergencyContact": zod.boolean(),
+  "status": zod.enum(['home', 'walking', 'lost']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create or retrieve the current owner's revocable pet QR token
+ */
+export const CreatePetQrParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const createPetQrResponseTokenMin = 43;
+export const createPetQrResponseTokenMax = 43;
+
+
+
+export const CreatePetQrResponse = zod.object({
+  "token": zod.string().min(createPetQrResponseTokenMin).max(createPetQrResponseTokenMax)
+})
+
+
+/**
+ * @summary Revoke a pet's public QR profile
+ */
+export const RevokePetQrParams = zod.object({
+  "petId": zod.coerce.string().uuid()
+})
+
+export const RevokePetQrResponse = zod.void()
+
+
+/**
+ * @summary Get the limited public profile associated with a QR token
+ */
+export const getPublicPetPathTokenMin = 43;
+export const getPublicPetPathTokenMax = 43;
+
+
+
+export const GetPublicPetParams = zod.object({
+  "token": zod.coerce.string().min(getPublicPetPathTokenMin).max(getPublicPetPathTokenMax)
+})
+
+export const GetPublicPetResponse = zod.object({
+  "name": zod.string(),
+  "species": zod.string(),
+  "breed": zod.string().nullable(),
+  "photoUrl": zod.string().url().nullable(),
+  "emergencyContact": zod.string().nullable()
+})
+
+
+/**
  * @summary Get the current provider's business profile
  */
+export const getProviderProfileResponseOneWebsiteUrlMax = 500;
+
+
+export const getProviderProfileResponseOneWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneInstagramUrlMax = 500;
+
+
+export const getProviderProfileResponseOneInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneFacebookUrlMax = 500;
+
+
+export const getProviderProfileResponseOneFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const getProviderProfileResponseOneWhatsappUrlMax = 500;
+
+
+export const getProviderProfileResponseOneWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const GetProviderProfileResponse = zod.union([zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(getProviderProfileResponseOneWebsiteUrlMax).regex(getProviderProfileResponseOneWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(getProviderProfileResponseOneInstagramUrlMax).regex(getProviderProfileResponseOneInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(getProviderProfileResponseOneFacebookUrlMax).regex(getProviderProfileResponseOneFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(getProviderProfileResponseOneWhatsappUrlMax).regex(getProviderProfileResponseOneWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -186,14 +450,52 @@ export const saveProviderProfileBodyNeighborhoodMax = 120;
 
 export const saveProviderProfileBodyDescriptionMax = 1000;
 
+export const saveProviderProfileBodyWebsiteUrlMax = 500;
+
+
+export const saveProviderProfileBodyWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyInstagramUrlMax = 500;
+
+
+export const saveProviderProfileBodyInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyFacebookUrlMax = 500;
+
+
+export const saveProviderProfileBodyFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileBodyWhatsappUrlMax = 500;
+
+
+export const saveProviderProfileBodyWhatsappUrlRegExp = new RegExp('^https:[/][/]');
 
 
 export const SaveProviderProfileBody = zod.object({
   "name": zod.string().min(1).max(saveProviderProfileBodyNameMax),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string().min(1).max(saveProviderProfileBodyNeighborhoodMax),
-  "description": zod.string().max(saveProviderProfileBodyDescriptionMax).nullish()
+  "description": zod.string().max(saveProviderProfileBodyDescriptionMax).nullish(),
+  "websiteUrl": zod.string().url().max(saveProviderProfileBodyWebsiteUrlMax).regex(saveProviderProfileBodyWebsiteUrlRegExp).nullish(),
+  "instagramUrl": zod.string().url().max(saveProviderProfileBodyInstagramUrlMax).regex(saveProviderProfileBodyInstagramUrlRegExp).nullish(),
+  "facebookUrl": zod.string().url().max(saveProviderProfileBodyFacebookUrlMax).regex(saveProviderProfileBodyFacebookUrlRegExp).nullish(),
+  "whatsappUrl": zod.string().url().max(saveProviderProfileBodyWhatsappUrlMax).regex(saveProviderProfileBodyWhatsappUrlRegExp).nullish()
 })
+
+export const saveProviderProfileResponseWebsiteUrlMax = 500;
+
+
+export const saveProviderProfileResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseInstagramUrlMax = 500;
+
+
+export const saveProviderProfileResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseFacebookUrlMax = 500;
+
+
+export const saveProviderProfileResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const saveProviderProfileResponseWhatsappUrlMax = 500;
+
+
+export const saveProviderProfileResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
 
 export const SaveProviderProfileResponse = zod.object({
   "id": zod.string().uuid(),
@@ -201,9 +503,486 @@ export const SaveProviderProfileResponse = zod.object({
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(saveProviderProfileResponseWebsiteUrlMax).regex(saveProviderProfileResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(saveProviderProfileResponseInstagramUrlMax).regex(saveProviderProfileResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(saveProviderProfileResponseFacebookUrlMax).regex(saveProviderProfileResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(saveProviderProfileResponseWhatsappUrlMax).regex(saveProviderProfileResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List the current provider's services
+ */
+export const listProviderServicesResponseNameMax = 120;
+
+export const listProviderServicesResponseDescriptionMax = 500;
+
+export const listProviderServicesResponseDurationMinutesMin = 5;
+export const listProviderServicesResponseDurationMinutesMax = 480;
+
+export const listProviderServicesResponsePriceCopMin = 0;
+export const listProviderServicesResponsePriceCopMax = 2147483647;
+
+
+
+export const ListProviderServicesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().min(1).max(listProviderServicesResponseNameMax),
+  "description": zod.string().max(listProviderServicesResponseDescriptionMax).nullable(),
+  "durationMinutes": zod.number().int().min(listProviderServicesResponseDurationMinutesMin).max(listProviderServicesResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(listProviderServicesResponsePriceCopMin).max(listProviderServicesResponsePriceCopMax).nullable(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListProviderServicesResponse = zod.array(ListProviderServicesResponseItem)
+
+
+/**
+ * @summary Create a service for the current provider
+ */
+export const createProviderServiceBodyNameMax = 120;
+
+export const createProviderServiceBodyDescriptionMax = 500;
+
+export const createProviderServiceBodyDurationMinutesMin = 5;
+export const createProviderServiceBodyDurationMinutesMax = 480;
+
+export const createProviderServiceBodyPriceCopMin = 0;
+export const createProviderServiceBodyPriceCopMax = 2147483647;
+
+
+
+export const CreateProviderServiceBody = zod.object({
+  "name": zod.string().min(1).max(createProviderServiceBodyNameMax),
+  "description": zod.string().max(createProviderServiceBodyDescriptionMax).nullish(),
+  "durationMinutes": zod.number().int().min(createProviderServiceBodyDurationMinutesMin).max(createProviderServiceBodyDurationMinutesMax),
+  "priceCop": zod.number().int().min(createProviderServiceBodyPriceCopMin).max(createProviderServiceBodyPriceCopMax).nullish()
+})
+
+export const createProviderServiceResponseNameMax = 120;
+
+export const createProviderServiceResponseDescriptionMax = 500;
+
+export const createProviderServiceResponseDurationMinutesMin = 5;
+export const createProviderServiceResponseDurationMinutesMax = 480;
+
+export const createProviderServiceResponsePriceCopMin = 0;
+export const createProviderServiceResponsePriceCopMax = 2147483647;
+
+
+
+export const CreateProviderServiceResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().min(1).max(createProviderServiceResponseNameMax),
+  "description": zod.string().max(createProviderServiceResponseDescriptionMax).nullable(),
+  "durationMinutes": zod.number().int().min(createProviderServiceResponseDurationMinutesMin).max(createProviderServiceResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(createProviderServiceResponsePriceCopMin).max(createProviderServiceResponsePriceCopMax).nullable(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a service owned by the current provider
+ */
+export const UpdateProviderServiceParams = zod.object({
+  "serviceId": zod.coerce.string().uuid()
+})
+
+export const updateProviderServiceBodyNameMax = 120;
+
+export const updateProviderServiceBodyDescriptionMax = 500;
+
+export const updateProviderServiceBodyDurationMinutesMin = 5;
+export const updateProviderServiceBodyDurationMinutesMax = 480;
+
+export const updateProviderServiceBodyPriceCopMin = 0;
+export const updateProviderServiceBodyPriceCopMax = 2147483647;
+
+
+
+export const UpdateProviderServiceBody = zod.object({
+  "name": zod.string().min(1).max(updateProviderServiceBodyNameMax).optional(),
+  "description": zod.string().max(updateProviderServiceBodyDescriptionMax).nullish(),
+  "durationMinutes": zod.number().int().min(updateProviderServiceBodyDurationMinutesMin).max(updateProviderServiceBodyDurationMinutesMax).optional(),
+  "priceCop": zod.number().int().min(updateProviderServiceBodyPriceCopMin).max(updateProviderServiceBodyPriceCopMax).nullish(),
+  "isActive": zod.boolean().optional()
+})
+
+export const updateProviderServiceResponseNameMax = 120;
+
+export const updateProviderServiceResponseDescriptionMax = 500;
+
+export const updateProviderServiceResponseDurationMinutesMin = 5;
+export const updateProviderServiceResponseDurationMinutesMax = 480;
+
+export const updateProviderServiceResponsePriceCopMin = 0;
+export const updateProviderServiceResponsePriceCopMax = 2147483647;
+
+
+
+export const UpdateProviderServiceResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().min(1).max(updateProviderServiceResponseNameMax),
+  "description": zod.string().max(updateProviderServiceResponseDescriptionMax).nullable(),
+  "durationMinutes": zod.number().int().min(updateProviderServiceResponseDurationMinutesMin).max(updateProviderServiceResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(updateProviderServiceResponsePriceCopMin).max(updateProviderServiceResponsePriceCopMax).nullable(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Archive a service owned by the current provider
+ */
+export const ArchiveProviderServiceParams = zod.object({
+  "serviceId": zod.coerce.string().uuid()
+})
+
+export const archiveProviderServiceResponseNameMax = 120;
+
+export const archiveProviderServiceResponseDescriptionMax = 500;
+
+export const archiveProviderServiceResponseDurationMinutesMin = 5;
+export const archiveProviderServiceResponseDurationMinutesMax = 480;
+
+export const archiveProviderServiceResponsePriceCopMin = 0;
+export const archiveProviderServiceResponsePriceCopMax = 2147483647;
+
+
+
+export const ArchiveProviderServiceResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().min(1).max(archiveProviderServiceResponseNameMax),
+  "description": zod.string().max(archiveProviderServiceResponseDescriptionMax).nullable(),
+  "durationMinutes": zod.number().int().min(archiveProviderServiceResponseDurationMinutesMin).max(archiveProviderServiceResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(archiveProviderServiceResponsePriceCopMin).max(archiveProviderServiceResponsePriceCopMax).nullable(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get the current provider's weekly hours and date exceptions
+ */
+export const getProviderAvailabilityResponseTimezoneMax = 100;
+
+export const getProviderAvailabilityResponseWeeklyWindowsItemOneStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const getProviderAvailabilityResponseWeeklyWindowsItemOneEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const getProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMin = 0;
+export const getProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMax = 6;
+
+export const getProviderAvailabilityResponseExceptionsItemWindowsItemStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const getProviderAvailabilityResponseExceptionsItemWindowsItemEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const GetProviderAvailabilityResponse = zod.object({
+  "timezone": zod.string().min(1).max(getProviderAvailabilityResponseTimezoneMax),
+  "weeklyWindows": zod.array(zod.object({
+  "startTime": zod.string().regex(getProviderAvailabilityResponseWeeklyWindowsItemOneStartTimeRegExp),
+  "endTime": zod.string().regex(getProviderAvailabilityResponseWeeklyWindowsItemOneEndTimeRegExp)
+}).and(zod.object({
+  "dayOfWeek": zod.number().int().min(getProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMin).max(getProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMax)
+}))),
+  "exceptions": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "isClosed": zod.boolean(),
+  "windows": zod.array(zod.object({
+  "startTime": zod.string().regex(getProviderAvailabilityResponseExceptionsItemWindowsItemStartTimeRegExp),
+  "endTime": zod.string().regex(getProviderAvailabilityResponseExceptionsItemWindowsItemEndTimeRegExp)
+}))
+}))
+})
+
+
+/**
+ * @summary Replace the current provider's weekly hours and date exceptions
+ */
+export const saveProviderAvailabilityBodyTimezoneMax = 100;
+
+export const saveProviderAvailabilityBodyWeeklyWindowsItemOneStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityBodyWeeklyWindowsItemOneEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityBodyWeeklyWindowsItemTwoDayOfWeekMin = 0;
+export const saveProviderAvailabilityBodyWeeklyWindowsItemTwoDayOfWeekMax = 6;
+
+export const saveProviderAvailabilityBodyExceptionsItemWindowsItemStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityBodyExceptionsItemWindowsItemEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const SaveProviderAvailabilityBody = zod.object({
+  "timezone": zod.string().min(1).max(saveProviderAvailabilityBodyTimezoneMax),
+  "weeklyWindows": zod.array(zod.object({
+  "startTime": zod.string().regex(saveProviderAvailabilityBodyWeeklyWindowsItemOneStartTimeRegExp),
+  "endTime": zod.string().regex(saveProviderAvailabilityBodyWeeklyWindowsItemOneEndTimeRegExp)
+}).and(zod.object({
+  "dayOfWeek": zod.number().int().min(saveProviderAvailabilityBodyWeeklyWindowsItemTwoDayOfWeekMin).max(saveProviderAvailabilityBodyWeeklyWindowsItemTwoDayOfWeekMax)
+}))),
+  "exceptions": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "isClosed": zod.boolean(),
+  "windows": zod.array(zod.object({
+  "startTime": zod.string().regex(saveProviderAvailabilityBodyExceptionsItemWindowsItemStartTimeRegExp),
+  "endTime": zod.string().regex(saveProviderAvailabilityBodyExceptionsItemWindowsItemEndTimeRegExp)
+}))
+}))
+})
+
+export const saveProviderAvailabilityResponseTimezoneMax = 100;
+
+export const saveProviderAvailabilityResponseWeeklyWindowsItemOneStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityResponseWeeklyWindowsItemOneEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMin = 0;
+export const saveProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMax = 6;
+
+export const saveProviderAvailabilityResponseExceptionsItemWindowsItemStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const saveProviderAvailabilityResponseExceptionsItemWindowsItemEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const SaveProviderAvailabilityResponse = zod.object({
+  "timezone": zod.string().min(1).max(saveProviderAvailabilityResponseTimezoneMax),
+  "weeklyWindows": zod.array(zod.object({
+  "startTime": zod.string().regex(saveProviderAvailabilityResponseWeeklyWindowsItemOneStartTimeRegExp),
+  "endTime": zod.string().regex(saveProviderAvailabilityResponseWeeklyWindowsItemOneEndTimeRegExp)
+}).and(zod.object({
+  "dayOfWeek": zod.number().int().min(saveProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMin).max(saveProviderAvailabilityResponseWeeklyWindowsItemTwoDayOfWeekMax)
+}))),
+  "exceptions": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "isClosed": zod.boolean(),
+  "windows": zod.array(zod.object({
+  "startTime": zod.string().regex(saveProviderAvailabilityResponseExceptionsItemWindowsItemStartTimeRegExp),
+  "endTime": zod.string().regex(saveProviderAvailabilityResponseExceptionsItemWindowsItemEndTimeRegExp)
+}))
+}))
+})
+
+
+/**
+ * @summary List appointments for the current owner or provider
+ */
+export const listAppointmentsResponseDurationMinutesMin = 5;
+export const listAppointmentsResponseDurationMinutesMax = 480;
+
+export const listAppointmentsResponsePriceCopMin = 0;
+export const listAppointmentsResponsePriceCopMax = 2147483647;
+
+
+
+export const ListAppointmentsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "providerProfileId": zod.string().uuid(),
+  "serviceId": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "providerName": zod.string(),
+  "serviceName": zod.string(),
+  "petName": zod.string(),
+  "durationMinutes": zod.number().int().min(listAppointmentsResponseDurationMinutesMin).max(listAppointmentsResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(listAppointmentsResponsePriceCopMin).max(listAppointmentsResponsePriceCopMax).nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date(),
+  "proposedStartsAt": zod.coerce.date().nullable(),
+  "proposedEndsAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['pending', 'confirmed', 'declined', 'cancelled', 'reschedule_pending']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAppointmentsResponse = zod.array(ListAppointmentsResponseItem)
+
+
+/**
+ * @summary Request an appointment with an approved provider
+ */
+export const requestAppointmentBodyTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const RequestAppointmentBody = zod.object({
+  "providerId": zod.string().uuid(),
+  "serviceId": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "date": zod.coerce.date(),
+  "time": zod.string().regex(requestAppointmentBodyTimeRegExp)
+})
+
+export const requestAppointmentResponseDurationMinutesMin = 5;
+export const requestAppointmentResponseDurationMinutesMax = 480;
+
+export const requestAppointmentResponsePriceCopMin = 0;
+export const requestAppointmentResponsePriceCopMax = 2147483647;
+
+
+
+export const RequestAppointmentResponse = zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "providerProfileId": zod.string().uuid(),
+  "serviceId": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "providerName": zod.string(),
+  "serviceName": zod.string(),
+  "petName": zod.string(),
+  "durationMinutes": zod.number().int().min(requestAppointmentResponseDurationMinutesMin).max(requestAppointmentResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(requestAppointmentResponsePriceCopMin).max(requestAppointmentResponsePriceCopMax).nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date(),
+  "proposedStartsAt": zod.coerce.date().nullable(),
+  "proposedEndsAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['pending', 'confirmed', 'declined', 'cancelled', 'reschedule_pending']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Confirm, decline, cancel, or propose/respond to a reschedule
+ */
+export const ActOnAppointmentParams = zod.object({
+  "appointmentId": zod.coerce.string().uuid()
+})
+
+export const actOnAppointmentBodyTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+
+
+export const ActOnAppointmentBody = zod.object({
+  "action": zod.enum(['confirm', 'decline', 'cancel', 'propose_reschedule', 'accept_reschedule', 'reject_reschedule']),
+  "date": zod.coerce.date().optional(),
+  "time": zod.string().regex(actOnAppointmentBodyTimeRegExp).optional()
+})
+
+export const actOnAppointmentResponseDurationMinutesMin = 5;
+export const actOnAppointmentResponseDurationMinutesMax = 480;
+
+export const actOnAppointmentResponsePriceCopMin = 0;
+export const actOnAppointmentResponsePriceCopMax = 2147483647;
+
+
+
+export const ActOnAppointmentResponse = zod.object({
+  "id": zod.string().uuid(),
+  "ownerId": zod.string().uuid(),
+  "providerProfileId": zod.string().uuid(),
+  "serviceId": zod.string().uuid(),
+  "petId": zod.string().uuid(),
+  "providerName": zod.string(),
+  "serviceName": zod.string(),
+  "petName": zod.string(),
+  "durationMinutes": zod.number().int().min(actOnAppointmentResponseDurationMinutesMin).max(actOnAppointmentResponseDurationMinutesMax),
+  "priceCop": zod.number().int().min(actOnAppointmentResponsePriceCopMin).max(actOnAppointmentResponsePriceCopMax).nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date(),
+  "proposedStartsAt": zod.coerce.date().nullable(),
+  "proposedEndsAt": zod.coerce.date().nullable(),
+  "status": zod.enum(['pending', 'confirmed', 'declined', 'cancelled', 'reschedule_pending']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List approved providers in the public directory
+ */
+export const listPublicProvidersQueryQMax = 120;
+
+export const listPublicProvidersQueryPageDefault = 1;
+
+export const listPublicProvidersQueryPageSizeDefault = 12;
+export const listPublicProvidersQueryPageSizeMax = 50;
+
+
+
+export const ListPublicProvidersQueryParams = zod.object({
+  "q": zod.coerce.string().min(1).max(listPublicProvidersQueryQMax).optional(),
+  "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']).optional(),
+  "page": zod.coerce.number().int().min(1).default(listPublicProvidersQueryPageDefault),
+  "pageSize": zod.coerce.number().int().min(1).max(listPublicProvidersQueryPageSizeMax).default(listPublicProvidersQueryPageSizeDefault)
+})
+
+export const listPublicProvidersResponseItemsItemWebsiteUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemInstagramUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemFacebookUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemWhatsappUrlMax = 500;
+
+
+export const listPublicProvidersResponseItemsItemWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+export const listPublicProvidersResponseItemsItemServicesItemDurationMinutesMin = 5;
+export const listPublicProvidersResponseItemsItemServicesItemDurationMinutesMax = 480;
+
+export const listPublicProvidersResponseItemsItemServicesItemPriceCopMin = 0;
+export const listPublicProvidersResponseItemsItemServicesItemPriceCopMax = 2147483647;
+
+export const listPublicProvidersResponseItemsItemAvailabilityTimezoneMax = 100;
+
+export const listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemOneStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemOneEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemTwoDayOfWeekMin = 0;
+export const listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemTwoDayOfWeekMax = 6;
+
+export const listPublicProvidersResponseItemsItemAvailabilityExceptionsItemWindowsItemStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const listPublicProvidersResponseItemsItemAvailabilityExceptionsItemWindowsItemEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const listPublicProvidersResponseTotalMin = 0;
+
+
+
+
+
+export const ListPublicProvidersResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
+  "neighborhood": zod.string(),
+  "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(listPublicProvidersResponseItemsItemWebsiteUrlMax).regex(listPublicProvidersResponseItemsItemWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(listPublicProvidersResponseItemsItemInstagramUrlMax).regex(listPublicProvidersResponseItemsItemInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(listPublicProvidersResponseItemsItemFacebookUrlMax).regex(listPublicProvidersResponseItemsItemFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(listPublicProvidersResponseItemsItemWhatsappUrlMax).regex(listPublicProvidersResponseItemsItemWhatsappUrlRegExp).nullable(),
+  "services": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "durationMinutes": zod.number().int().min(listPublicProvidersResponseItemsItemServicesItemDurationMinutesMin).max(listPublicProvidersResponseItemsItemServicesItemDurationMinutesMax),
+  "priceCop": zod.number().int().min(listPublicProvidersResponseItemsItemServicesItemPriceCopMin).max(listPublicProvidersResponseItemsItemServicesItemPriceCopMax).nullable()
+})),
+  "availability": zod.object({
+  "timezone": zod.string().min(1).max(listPublicProvidersResponseItemsItemAvailabilityTimezoneMax),
+  "weeklyWindows": zod.array(zod.object({
+  "startTime": zod.string().regex(listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemOneStartTimeRegExp),
+  "endTime": zod.string().regex(listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemOneEndTimeRegExp)
+}).and(zod.object({
+  "dayOfWeek": zod.number().int().min(listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemTwoDayOfWeekMin).max(listPublicProvidersResponseItemsItemAvailabilityWeeklyWindowsItemTwoDayOfWeekMax)
+}))),
+  "exceptions": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "isClosed": zod.boolean(),
+  "windows": zod.array(zod.object({
+  "startTime": zod.string().regex(listPublicProvidersResponseItemsItemAvailabilityExceptionsItemWindowsItemStartTimeRegExp),
+  "endTime": zod.string().regex(listPublicProvidersResponseItemsItemAvailabilityExceptionsItemWindowsItemEndTimeRegExp)
+}))
+}))
+})
+})),
+  "total": zod.number().int().min(listPublicProvidersResponseTotalMin),
+  "page": zod.number().int().min(1),
+  "pageSize": zod.number().int().min(1)
 })
 
 
@@ -235,12 +1014,34 @@ export const ListAdminProvidersQueryParams = zod.object({
   "status": zod.enum(['pending', 'approved', 'suspended']).optional()
 })
 
+export const listAdminProvidersResponseWebsiteUrlMax = 500;
+
+
+export const listAdminProvidersResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseInstagramUrlMax = 500;
+
+
+export const listAdminProvidersResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseFacebookUrlMax = 500;
+
+
+export const listAdminProvidersResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const listAdminProvidersResponseWhatsappUrlMax = 500;
+
+
+export const listAdminProvidersResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const ListAdminProvidersResponseItem = zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(listAdminProvidersResponseWebsiteUrlMax).regex(listAdminProvidersResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(listAdminProvidersResponseInstagramUrlMax).regex(listAdminProvidersResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(listAdminProvidersResponseFacebookUrlMax).regex(listAdminProvidersResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(listAdminProvidersResponseWhatsappUrlMax).regex(listAdminProvidersResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -259,12 +1060,34 @@ export const UpdateProviderApprovalBody = zod.object({
   "approvalStatus": zod.enum(['approved', 'suspended'])
 })
 
+export const updateProviderApprovalResponseWebsiteUrlMax = 500;
+
+
+export const updateProviderApprovalResponseWebsiteUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseInstagramUrlMax = 500;
+
+
+export const updateProviderApprovalResponseInstagramUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseFacebookUrlMax = 500;
+
+
+export const updateProviderApprovalResponseFacebookUrlRegExp = new RegExp('^https:[/][/]');
+export const updateProviderApprovalResponseWhatsappUrlMax = 500;
+
+
+export const updateProviderApprovalResponseWhatsappUrlRegExp = new RegExp('^https:[/][/]');
+
+
 export const UpdateProviderApprovalResponse = zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "category": zod.enum(['veterinary', 'daycare', 'walker', 'shelter', 'store', 'other']),
   "neighborhood": zod.string(),
   "description": zod.string().nullable(),
+  "websiteUrl": zod.string().url().max(updateProviderApprovalResponseWebsiteUrlMax).regex(updateProviderApprovalResponseWebsiteUrlRegExp).nullable(),
+  "instagramUrl": zod.string().url().max(updateProviderApprovalResponseInstagramUrlMax).regex(updateProviderApprovalResponseInstagramUrlRegExp).nullable(),
+  "facebookUrl": zod.string().url().max(updateProviderApprovalResponseFacebookUrlMax).regex(updateProviderApprovalResponseFacebookUrlRegExp).nullable(),
+  "whatsappUrl": zod.string().url().max(updateProviderApprovalResponseWhatsappUrlMax).regex(updateProviderApprovalResponseWhatsappUrlRegExp).nullable(),
   "approvalStatus": zod.enum(['pending', 'approved', 'suspended']),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

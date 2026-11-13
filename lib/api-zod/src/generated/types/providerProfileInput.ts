@@ -24,4 +24,28 @@ export interface ProviderProfileInput {
      * @nullable
      */
   description?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl?: string | null;
 }

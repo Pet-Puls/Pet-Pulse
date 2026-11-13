@@ -43,6 +43,27 @@ export interface MeProfile {
   updatedAt: string;
 }
 
+export interface NotificationPreferences {
+  /**
+     * @maxLength 16
+     * @nullable
+     * @pattern ^\+[1-9][0-9]{1,14}$
+     */
+  phoneNumber: string | null;
+  whatsappOptIn: boolean;
+  updatedAt: string;
+}
+
+export interface NotificationPreferencesInput {
+  /**
+     * @maxLength 16
+     * @nullable
+     * @pattern ^\+[1-9][0-9]{1,14}$
+     */
+  phoneNumber: string | null;
+  whatsappOptIn: boolean;
+}
+
 export type OnboardingInputRequestedRole = typeof OnboardingInputRequestedRole[keyof typeof OnboardingInputRequestedRole];
 
 
@@ -79,6 +100,10 @@ export interface PetProfile {
   age: string | null;
   /** @nullable */
   emergencyContact: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  qrEnabled: boolean;
+  shareEmergencyContact: boolean;
   status: PetProfileStatus;
   createdAt: string;
   updatedAt: string;
@@ -110,6 +135,7 @@ export interface PetInput {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
 }
 
 export type PetUpdateStatus = typeof PetUpdateStatus[keyof typeof PetUpdateStatus];
@@ -118,7 +144,6 @@ export type PetUpdateStatus = typeof PetUpdateStatus[keyof typeof PetUpdateStatu
 export const PetUpdateStatus = {
   home: 'home',
   walking: 'walking',
-  lost: 'lost',
 } as const;
 
 export interface PetUpdate {
@@ -147,7 +172,69 @@ export interface PetUpdate {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
   status?: PetUpdateStatus;
+}
+
+export interface LostPetReportInput {
+  /**
+     * @minLength 2
+     * @maxLength 160
+     */
+  locationDescription: string;
+  lastSeenAt: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  notes?: string | null;
+  consentToShareLocation: boolean;
+}
+
+export type LostPetReportStatus = typeof LostPetReportStatus[keyof typeof LostPetReportStatus];
+
+
+export const LostPetReportStatus = {
+  active: 'active',
+  closed: 'closed',
+  expired: 'expired',
+} as const;
+
+export interface LostPetReport {
+  id: string;
+  petId: string;
+  petName: string;
+  species: string;
+  /** @nullable */
+  breed: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  locationDescription: string;
+  lastSeenAt: string;
+  /** @nullable */
+  notes: string | null;
+  expiresAt: string;
+  status: LostPetReportStatus;
+  canManage: boolean;
+}
+
+export interface PetQrResponse {
+  /**
+     * @minLength 43
+     * @maxLength 43
+     */
+  token: string;
+}
+
+export interface PublicPetProfile {
+  name: string;
+  species: string;
+  /** @nullable */
+  breed: string | null;
+  /** @nullable */
+  photoUrl: string | null;
+  /** @nullable */
+  emergencyContact: string | null;
 }
 
 export type ProviderProfileCategory = typeof ProviderProfileCategory[keyof typeof ProviderProfileCategory];
@@ -178,9 +265,293 @@ export interface ProviderProfile {
   neighborhood: string;
   /** @nullable */
   description: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl: string | null;
   approvalStatus: ProviderProfileApprovalStatus;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProviderService {
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description: string | null;
+  /**
+     * @minimum 5
+     * @maximum 480
+     */
+  durationMinutes: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     * @nullable
+     */
+  priceCop: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProviderServiceInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minimum 5
+     * @maximum 480
+     */
+  durationMinutes: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     * @nullable
+     */
+  priceCop?: number | null;
+}
+
+export interface ProviderServiceUpdateInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name?: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minimum 5
+     * @maximum 480
+     */
+  durationMinutes?: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     * @nullable
+     */
+  priceCop?: number | null;
+  isActive?: boolean;
+}
+
+export type ProviderServiceList = ProviderService[];
+
+export interface AvailabilityWindow {
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  startTime: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  endTime: string;
+}
+
+export type WeeklyAvailabilityWindow = AvailabilityWindow & {
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  dayOfWeek: number;
+};
+
+export interface AvailabilityException {
+  date: string;
+  isClosed: boolean;
+  windows: AvailabilityWindow[];
+}
+
+export interface ProviderAvailability {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  timezone: string;
+  weeklyWindows: WeeklyAvailabilityWindow[];
+  exceptions: AvailabilityException[];
+}
+
+export type ProviderAvailabilityInput = ProviderAvailability;
+
+export type AppointmentStatus = typeof AppointmentStatus[keyof typeof AppointmentStatus];
+
+
+export const AppointmentStatus = {
+  pending: 'pending',
+  confirmed: 'confirmed',
+  declined: 'declined',
+  cancelled: 'cancelled',
+  reschedule_pending: 'reschedule_pending',
+} as const;
+
+export interface Appointment {
+  id: string;
+  ownerId: string;
+  providerProfileId: string;
+  serviceId: string;
+  petId: string;
+  providerName: string;
+  serviceName: string;
+  petName: string;
+  /**
+     * @minimum 5
+     * @maximum 480
+     */
+  durationMinutes: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     * @nullable
+     */
+  priceCop: number | null;
+  timezone: string;
+  startsAt: string;
+  endsAt: string;
+  /** @nullable */
+  proposedStartsAt: string | null;
+  /** @nullable */
+  proposedEndsAt: string | null;
+  status: AppointmentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AppointmentList = Appointment[];
+
+export interface CreateAppointmentInput {
+  providerId: string;
+  serviceId: string;
+  petId: string;
+  date: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  time: string;
+}
+
+export type AppointmentActionInputAction = typeof AppointmentActionInputAction[keyof typeof AppointmentActionInputAction];
+
+
+export const AppointmentActionInputAction = {
+  confirm: 'confirm',
+  decline: 'decline',
+  cancel: 'cancel',
+  propose_reschedule: 'propose_reschedule',
+  accept_reschedule: 'accept_reschedule',
+  reject_reschedule: 'reject_reschedule',
+} as const;
+
+export interface AppointmentActionInput {
+  action: AppointmentActionInputAction;
+  date?: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  time?: string;
+}
+
+export type PublicProviderProfileCategory = typeof PublicProviderProfileCategory[keyof typeof PublicProviderProfileCategory];
+
+
+export const PublicProviderProfileCategory = {
+  veterinary: 'veterinary',
+  daycare: 'daycare',
+  walker: 'walker',
+  shelter: 'shelter',
+  store: 'store',
+  other: 'other',
+} as const;
+
+export interface ProviderServicePublic {
+  id: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  /**
+     * @minimum 5
+     * @maximum 480
+     */
+  durationMinutes: number;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     * @nullable
+     */
+  priceCop: number | null;
+}
+
+export interface PublicProviderProfile {
+  id: string;
+  name: string;
+  category: PublicProviderProfileCategory;
+  neighborhood: string;
+  /** @nullable */
+  description: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl: string | null;
+  services: ProviderServicePublic[];
+  availability: ProviderAvailability;
+}
+
+export interface PublicProviderPage {
+  items: PublicProviderProfile[];
+  /** @minimum 0 */
+  total: number;
+  /** @minimum 1 */
+  page: number;
+  /** @minimum 1 */
+  pageSize: number;
 }
 
 export type ProviderProfileInputCategory = typeof ProviderProfileInputCategory[keyof typeof ProviderProfileInputCategory];
@@ -212,6 +583,30 @@ export interface ProviderProfileInput {
      * @nullable
      */
   description?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  websiteUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  instagramUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  facebookUrl?: string | null;
+  /**
+     * @maxLength 500
+     * @nullable
+     * @pattern ^https:[/][/]
+     */
+  whatsappUrl?: string | null;
 }
 
 export type ProviderApprovalInputApprovalStatus = typeof ProviderApprovalInputApprovalStatus[keyof typeof ProviderApprovalInputApprovalStatus];
@@ -236,6 +631,36 @@ export interface AdminOverview {
   /** @minimum 0 */
   pendingProviders: number;
 }
+
+export type ListPublicProvidersParams = {
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+q?: string;
+category?: ListPublicProvidersCategory;
+/**
+ * @minimum 1
+ */
+page?: number;
+/**
+ * @minimum 1
+ * @maximum 50
+ */
+pageSize?: number;
+};
+
+export type ListPublicProvidersCategory = typeof ListPublicProvidersCategory[keyof typeof ListPublicProvidersCategory];
+
+
+export const ListPublicProvidersCategory = {
+  veterinary: 'veterinary',
+  daycare: 'daycare',
+  walker: 'walker',
+  shelter: 'shelter',
+  store: 'store',
+  other: 'other',
+} as const;
 
 export type ListAdminProvidersParams = {
 status?: ListAdminProvidersStatus;
