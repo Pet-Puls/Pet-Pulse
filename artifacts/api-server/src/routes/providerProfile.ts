@@ -171,6 +171,10 @@ router.put(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
+    if (!parsed.data.name.trim() || !parsed.data.neighborhood.trim()) {
+      res.status(400).json({ error: "El nombre comercial y el barrio o localidad son obligatorios." });
+      return;
+    }
     const linkFields = [
       "websiteUrl",
       "instagramUrl",

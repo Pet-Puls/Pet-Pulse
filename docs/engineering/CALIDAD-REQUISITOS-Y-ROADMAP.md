@@ -35,6 +35,8 @@ La puerta de privacidad se probó en staging. Las migraciones `0003`–`0006` se
 
 Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opcionales. Se exige HTTPS y se valida que los enlaces sociales correspondan al dominio de su red. Los cambios al perfil regresan al estado pendiente de revisión; el directorio público solo lista perfiles aprobados. La migración `0002_provider_social_links.sql` se aplicó en staging. Servicios y disponibilidad permiten configuración aunque el proveedor esté pendiente, pero solo se publican para perfiles aprobados.
 
+En los cambios locales, la API rechaza el nombre de la cuenta, el nombre y la especie de mascota y el nombre comercial y barrio del proveedor si contienen únicamente espacios; se recortan antes de guardarse. La revisión de los demás campos sigue pendiente y las pruebas con datos simulados no sustituyen la comprobación en staging.
+
 El esquema local ya incluye catálogo de servicios, disponibilidad semanal/excepciones, citas, preferencias de WhatsApp y outbox. Las migraciones `0003_provider_services_and_availability.sql`, `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` se aplicaron y verificaron en staging el 13 de noviembre de 2026; no se han aplicado en producción. WhatsApp conserva avisos diferidos sin enviarlos hasta integrar un proveedor; el correo usa Gmail SMTP cuando se configuran sus secretos.
 
 ## 3. Hallazgos de ingeniería y acciones

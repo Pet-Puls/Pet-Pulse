@@ -224,6 +224,24 @@ function addProviderIdentity() {
 }
 
 describe("provider profile routes", () => {
+  it.each([
+    { name: "   ", neighborhood: "Laureles" },
+    { name: "Clínica Luna", neighborhood: " \t " },
+  ])("rejects whitespace-only provider fields", async fields => {
+    addProviderIdentity();
+    const response = await fetch(`${baseUrl}/api/provider-profile`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ...fields, category: "veterinary" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "El nombre comercial y el barrio o localidad son obligatorios.",
+    });
+    expect(mocks.insertValues).not.toHaveBeenCalled();
+  });
+
   it("saves social links and resets an approved profile to pending review", async () => {
     addProviderIdentity();
     mocks.providers.push({

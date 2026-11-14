@@ -27,6 +27,7 @@ export default function ProviderPage() {
   const [whatsappUrl, setWhatsappUrl] = useState('');
   const [initialized, setInitialized] = useState(false);
   const [notice, setNotice] = useState('');
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (profile.data && !initialized) {
@@ -42,6 +43,11 @@ export default function ProviderPage() {
 
   const submit = (event: FormEvent) => {
     event.preventDefault(); setNotice('');
+    if (!name.trim() || !neighborhood.trim()) {
+      setFormError('Escribe el nombre comercial y el barrio o localidad.');
+      return;
+    }
+    setFormError('');
     saveProfile.mutate({ data: {
       name: name.trim(),
       category,
@@ -62,6 +68,7 @@ export default function ProviderPage() {
     {!profile.isLoading && !profile.isError && <div className="account-grid two">
       <section className="account-panel"><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 18 }}><div className="account-kicker">Datos del negocio</div><span className={`provider-status ${profile.data?.approvalStatus || 'pending'}`}>{profile.data ? profile.data.approvalStatus === 'approved' ? 'Aprobado' : profile.data.approvalStatus === 'suspended' ? 'Suspendido' : 'Pendiente' : 'Sin enviar'}</span></div>
         {notice && <div className="notice-box" role="status" style={{ marginBottom: 15 }}><BadgeCheck size={17}/>{notice}</div>}
+        {formError && <div className="error-box" role="alert" style={{ marginBottom: 14 }}>{formError}</div>}
         {saveProfile.isError && <div className="error-box" role="alert" style={{ marginBottom: 14 }}>{errorMessage(saveProfile.error)}</div>}
         <form className="account-form" onSubmit={submit}>
           <div className="account-field full"><label htmlFor="business-name">Nombre comercial</label><input id="business-name" required maxLength={160} value={name} onChange={e => setName(e.target.value)} placeholder="Nombre de tu negocio"/></div>

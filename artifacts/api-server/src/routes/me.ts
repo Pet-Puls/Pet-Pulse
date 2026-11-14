@@ -57,6 +57,10 @@ router.put("/me/onboarding", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  if (!parsed.data.displayName.trim()) {
+    res.status(400).json({ error: "El nombre es obligatorio." });
+    return;
+  }
 
   const clerkUserId = req.clerkUserId;
   if (!clerkUserId) {

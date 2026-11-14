@@ -100,6 +100,10 @@ router.post("/pets", requireRole("owner"), async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  if (!parsed.data.name.trim() || !parsed.data.species.trim()) {
+    res.status(400).json({ error: "El nombre y la especie son obligatorios." });
+    return;
+  }
 
   const profile = req.petPulseProfile;
   if (!profile) {
@@ -136,6 +140,13 @@ router.patch(
     const parsed = UpdatePetBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    if (
+      (parsed.data.name !== undefined && !parsed.data.name.trim()) ||
+      (parsed.data.species !== undefined && !parsed.data.species.trim())
+    ) {
+      res.status(400).json({ error: "El nombre y la especie no pueden quedar vacíos." });
       return;
     }
 

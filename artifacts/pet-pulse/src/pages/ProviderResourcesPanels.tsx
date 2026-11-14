@@ -95,6 +95,10 @@ export function ProviderServicesPanel() {
   function submit(event: FormEvent) {
     event.preventDefault();
     setNotice('');
+    if (!name.trim()) {
+      setNotice('Escribe el nombre del servicio.');
+      return;
+    }
     const duration = Number(durationMinutes);
     const price = priceCop.trim() === '' ? null : Number(priceCop);
     if (

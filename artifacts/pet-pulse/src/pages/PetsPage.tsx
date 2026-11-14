@@ -36,6 +36,7 @@ function PetEditor({
   const [shareEmergencyContact, setShareEmergencyContact] = useState(pet?.shareEmergencyContact || false);
   const [photo, setPhoto] = useState<File>();
   const [photoError, setPhotoError] = useState('');
+  const [formError, setFormError] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(pet?.photoUrl ?? null);
 
   useEffect(() => {
@@ -67,6 +68,11 @@ function PetEditor({
   return <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (!saving && e.target === e.currentTarget) onClose(); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="pet-editor-title"><div className="modal-head"><div><div className="eyebrow">PetPulse · perfil privado</div><h2 className="display" id="pet-editor-title">{pet ? `Editar a ${pet.name}` : 'Nueva mascota'}</h2></div><button className="icon-button" aria-label="Cerrar formulario" onClick={onClose} disabled={saving}><X size={17}/></button></div>
     <form className="account-form" onSubmit={e => {
       e.preventDefault();
+      if (!name.trim() || !species.trim()) {
+        setFormError('Escribe el nombre y la especie de la mascota.');
+        return;
+      }
+      setFormError('');
       onSaved({
         name: name.trim(),
         species: species.trim(),
@@ -82,6 +88,7 @@ function PetEditor({
       </label>
       <p className="subtle pet-photo-help">JPEG, PNG o WebP · máximo 5 MB. Se guarda de forma privada.</p>
       {photoError && <p className="error-box" role="alert">{photoError}</p>}
+      {formError && <p className="error-box full" role="alert">{formError}</p>}
       <div className="account-field"><label htmlFor="pet-name">Nombre</label><input id="pet-name" value={name} required maxLength={100} disabled={saving} onChange={e => setName(e.target.value)} autoFocus/></div>
       <div className="account-field"><label htmlFor="pet-species">Especie</label><input id="pet-species" value={species} required maxLength={60} disabled={saving} onChange={e => setSpecies(e.target.value)} placeholder="Perro, gato…"/></div>
       <div className="account-field"><label htmlFor="pet-breed">Raza (opcional)</label><input id="pet-breed" value={breed} maxLength={120} disabled={saving} onChange={e => setBreed(e.target.value)}/></div>

@@ -39,13 +39,30 @@ vi.mock("drizzle-orm", () => ({
 
 vi.mock("@workspace/db", () => ({
   db: {
-    insert: () => ({
-      values: (profile: { clerkUserId: string; email: string; emailVerified: boolean; displayName: string; role: string; onboardingCompleted: boolean }) => ({
+    insert: (table: unknown) => ({
+      values: (values: Record<string, unknown>) => ({
+        returning: async () => {
+          if (table !== mocks.tables.pets) throw new Error("Unexpected insert.");
+          const pet = {
+            id: "550e8400-e29b-41d4-a716-446655440000",
+            ...values,
+            photoPath: null,
+            qrToken: null,
+            status: "home",
+            createdAt: new Date("2026-01-01T00:00:00.000Z"),
+            updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+          };
+          mocks.pets.push(pet);
+          return [pet];
+        },
         onConflictDoNothing: async () => {
-          if (!mocks.profiles.has(profile.clerkUserId)) {
-            mocks.profiles.set(profile.clerkUserId, {
-              id: `${profile.clerkUserId}-profile`,
-              ...profile,
+          if (table !== mocks.tables.userProfiles || typeof values.clerkUserId !== "string") {
+            throw new Error("Unexpected profile insert.");
+          }
+          if (!mocks.profiles.has(values.clerkUserId)) {
+            mocks.profiles.set(values.clerkUserId, {
+              id: `${values.clerkUserId}-profile`,
+              ...values,
             });
           }
         },
@@ -77,6 +94,7 @@ vi.mock("@workspace/db", () => ({
   },
   lostPetReportsTable: mocks.tables.lostPetReports,
   petsTable: mocks.tables.pets,
+  providerProfilesTable: {},
   userProfilesTable: mocks.tables.userProfiles,
 }));
 
@@ -89,9 +107,12 @@ vi.mock("../src/lib/petPhotoStorage", () => ({
 
 import express from "express";
 import { createOrSyncProfile, loadClerkIdentity, requireAuth, requireRole } from "../src/middlewares/auth";
+import meRouter from "../src/routes/me";
 import petsRouter from "../src/routes/pets";
 
 const app = express();
+app.use(express.json());
+app.use("/api", meRouter);
 app.use("/api", petsRouter);
 app.get(
   "/owner",
@@ -156,6 +177,48 @@ function addProfile(
 }
 
 describe("API authorization middleware", () => {
+  it("rejects an onboarding name made only of whitespace", async () => {
+    const response = await fetch(`${baseUrl}/api/me/onboarding`, {
+      method: "PUT",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify({ displayName: " \t ", requestedRole: "owner" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "El nombre es obligatorio." });
+    expect(mocks.getUser).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["POST", "/api/pets", { name: "   ", species: "Perro" }],
+    ["POST", "/api/pets", { name: "Luna", species: " \t " }],
+    ["PATCH", "/api/pets/550e8400-e29b-41d4-a716-446655440000", { name: "   " }],
+    ["PATCH", "/api/pets/550e8400-e29b-41d4-a716-446655440000", { species: " \t " }],
+  ])("rejects whitespace-only required pet fields in %s", async (method, path, body) => {
+    addProfile("owner-user", "owner");
+    const response = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify(body),
+    });
+
+    expect(response.status).toBe(400);
+    expect(mocks.pets).toEqual([]);
+  });
+
+  it("accepts and trims valid pet names and species", async () => {
+    addProfile("owner-user", "owner");
+    const response = await fetch(`${baseUrl}/api/pets`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify({ name: "  Ñandú  ", species: "  Ave  " }),
+    });
+
+    expect(response.status, await response.clone().text()).toBe(201);
+    expect(await response.json()).toMatchObject({ name: "Ñandú", species: "Ave" });
+    expect(mocks.pets[0]).toMatchObject({ name: "Ñandú", species: "Ave" });
+  });
+
   it("rejects requests without an authenticated identity", async () => {
     const response = await fetch(`${baseUrl}/owner`);
 
