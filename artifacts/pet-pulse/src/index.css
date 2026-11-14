@@ -464,6 +464,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 :is(.account-panel,.directory-card,.panel) { overflow-wrap:anywhere; }
 .pet-actions { flex-wrap:wrap; }
 .appointment-main { min-width:0; overflow-wrap:anywhere; }
+.workspace-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:9px; }
 
 @media(max-width:900px) {
   .demo-map-layout, .demo-services-layout { grid-template-columns:minmax(0,1fr); }
@@ -473,6 +474,10 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
   .mobile-nav a { min-width:0; font-size:10px; text-align:center; line-height:1.15; }
   .app-shell { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
   .section-row { gap:12px; flex-wrap:wrap; }
+}
+@media(max-width:560px) {
+  .workspace-actions { flex-direction:column; align-items:stretch; }
+  .workspace-actions .account-button { min-height:44px; }
 }
 @media(max-width:420px) {
   .mobile-nav { grid-template-columns:repeat(3,minmax(0,1fr)); }
