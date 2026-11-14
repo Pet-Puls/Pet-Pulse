@@ -246,8 +246,8 @@ export default function LostPetsPage({ me }: { me: MeProfile }) {
       <PawPrint size={28}/><h2 className="display">Primero agrega una mascota</h2>
       <p>Necesitas un perfil para crear un reporte.</p><ActionLink href="/workspace/pets">Ir a mis mascotas</ActionLink>
     </section>}
-    {me.role === 'owner' && !pets.isLoading && !pets.isError && pets.data?.length && !petsWithoutActiveReport.length && <section className="account-panel">
-      <p className="subtle">Todas tus mascotas ya tienen un reporte activo. Puedes renovarlo o cerrarlo en esta página.</p>
+    {me.role === 'owner' && !pets.isLoading && !pets.isError && (pets.data?.length ?? 0) > 0 && !petsWithoutActiveReport.length && <section className="account-panel">
+      <p className="subtle">Todas tus mascotas ya tienen un reporte activo. Puedes cerrarlo o renovarlo cuando venza en esta página.</p>
     </section>}
     {!reports.isLoading && !reports.isError && <>
       {me.role === 'owner' && <section>

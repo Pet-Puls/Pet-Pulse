@@ -132,11 +132,64 @@ Completa esta validación en proyectos de Clerk, Supabase, Render y Vercel separ
 
 El comando de migración se ejecuta manualmente contra el destino confirmado; este documento no autoriza ni ejecuta cambios remotos. Las pruebas automatizadas locales usan dobles de Clerk y base de datos, por lo que no reemplazan esta puerta de salida.
 
+**Ensayos parciales de recuperación (14 de noviembre de 2026):** se restauraron por separado, en PostgreSQL 17 local dentro de un contenedor sin red, una copia antigua de `public` de staging y otra actualizada del mismo esquema. Los conteos de las tres tablas de la copia antigua y las ocho tablas de la actualizada coincidieron con sus respectivos archivos. La copia actualizada incluye citas y reportes, pero no objetos de Storage, identidades de Clerk ni el historial de migraciones de Drizzle fuera de `public`; no se ha ensayado una recuperación completa de todos los servicios. No se modificaron staging ni producción. Las copias y el contenedor contienen datos y requieren acceso restringido y una política de retención aprobada.
+
 ## Datos y migraciones de cuentas
 
 `migrate` recrea la estructura vacía de PostgreSQL; no inventa usuarios ni copia datos personales. Las cuentas de Clerk y los perfiles de aplicación están relacionados por el identificador Clerk. Al cambiar a una instancia Clerk nueva, las cuentas se registran de nuevo y los identificadores antiguos no se reasignan automáticamente.
 
 Para trasladar una instalación que ya tenga datos reales se necesita una migración de datos separada: exportación/backup de PostgreSQL, estrategia para conservar o mapear IDs de Clerk y restauración controlada. No apuntes `migrate` a una base con datos existentes sin revisar primero su estado.
+
+## Recuperación integral: preparación pendiente
+
+Esta sección es un plan preliminar, no una recuperación certificada ni autorización para crear copias, restaurar, migrar cuentas o cambiar configuración. Definir responsables, destino cifrado con acceso restringido, conservación, frecuencia y objetivos de pérdida de datos (RPO) y tiempo de recuperación (RTO) antes de operar. No guardar datos, contraseñas, tokens, claves ni hashes en el repositorio, tickets o logs compartidos.
+
+| Componente | Necesario para recuperación | Estado |
+| --- | --- | --- |
+| PostgreSQL | Copia consistente de datos y estructura de la aplicación, más el historial de migraciones Drizzle correspondiente y el código de la misma versión. | `public` de staging y, por separado, `public` más historial con datos ficticios restaurados localmente; recuperación integral pendiente. |
+| Fotos | Copia independiente de los objetos de `pet-photos`, sus rutas y tipos de contenido; configuración privada y políticas aplicables del bucket. | Bucket privado y restricciones comprobados en staging; ensayo limitado con una imagen ficticia en otro bucket del mismo proyecto. Recuperación integral pendiente. |
+| Clerk | Estrategia aprobada para identidades, acceso y correspondencia con `clerk_user_id`; configuración de la instancia y dominios. | Exportación, recuperación y reconciliación no ensayadas. |
+| Operación | Configuración de Vercel/Render, orígenes permitidos, variables y secretos de cada entorno; colas de avisos y monitoreo. | Inventario y recuperación operativa pendientes; no guardar valores secretos en esta guía. |
+
+### Ensayo propuesto en un entorno aislado
+
+1. **Preparar:** confirmar origen y destino, autorización, versión de código y responsables. Usar cuentas y fotos ficticias; no conectar la copia a servicios de producción ni activar Gmail o WhatsApp. Registrar fecha, zona horaria, versión y alcance de cada copia sin incluir datos personales.
+2. **Base e historial:** respaldar el esquema de aplicación y los datos junto con el historial Drizzle existente, si está presente. Verificar primero su ubicación y estado en el origen: no suponer que un esquema aplicado manualmente tiene historial. Restaurar en una base aislada y comparar estructura, registros y relaciones; contrastar historial y migraciones versionadas antes de ejecutar `migrate`. Una copia que solo contiene `public` no demuestra que sea seguro volver a migrar.
+3. **Fotos:** copiar los objetos mediante un mecanismo oficial de Storage a un destino protegido. El backup de PostgreSQL no contiene los archivos. Recrear un bucket privado separado con los límites y políticas revisados y restaurar mediante la API de Storage o la vía soportada por Supabase, no mediante escrituras SQL en `storage`. Conservar la ruta exacta de cada objeto y su tipo de contenido. Comparar el inventario de archivos y sus contenidos, y contrastar las rutas referenciadas por mascotas con los objetos restaurados; investigar referencias sin archivo y archivos sin referencia sin borrarlos automáticamente.
+4. **Consistencia temporal:** coordinar una ventana sin escrituras de fotos y datos, o definir otro mecanismo que produzca una copia coherente. La aplicación sobrescribe la foto en la misma ruta al actualizarla: un backup de base más una copia posterior de Storage puede contener una versión diferente. Documentar la ventana y cualquier pérdida entre copias.
+5. **Identidad:** para un ensayo con la misma instancia de prueba, verificar la asociación existente por ID y acceso de cuentas ficticias. Para una instancia nueva, diseñar una migración y correspondencia de IDs revisada, verificar identidad por un medio seguro y ensayarla antes de cambiar perfiles; no vincular cuentas solo por un correo coincidente. Clerk indica que no se pueden migrar usuarios de Development a Production. Una exportación de Clerk puede incluir hashes de contraseñas y exige protección reforzada; no realizarla sin autorización y plan de custodia. No asumir que exportar usuarios recupera sesiones o toda la configuración.
+6. **Prueba funcional:** con el sistema aislado, comprobar inicio de sesión, propiedad de mascotas, una foto recuperada, denegación de acceso a otra cuenta, citas, reportes y QR/consentimiento. Revisar antes de habilitar tráfico las fechas de expiración, revocaciones y operaciones ocurridas después de la copia: una restauración puede devolver estados anteriores. Revisar la cola de avisos con el envío desactivado; no reenviar automáticamente mensajes que podrían haberse entregado después del respaldo.
+7. **Cierre:** registrar resultados, discrepancias, tiempo real y responsables. Una muestra funcional no sustituye la comparación de inventarios. Aprobar un procedimiento de reconciliación y repetir el ensayo hasta que satisfaga los RPO/RTO definidos; únicamente entonces evaluar una recuperación real con autorización específica.
+
+Las guías oficiales distinguen restauración de base y migración de objetos. Antes de usarlas, revisar permisos, plan, costos y alcance del entorno. No ejecutar una restauración sobre staging o producción como parte de este ensayo.
+
+**Ensayo del historial Drizzle (14 de noviembre de 2026):** una consulta de solo lectura en staging encontró siete registros en `drizzle.__drizzle_migrations`; sus fechas y hashes coincidieron con las siete migraciones versionadas. En PostgreSQL 17 local se respaldaron y restauraron juntos `public` y `drizzle` desde una base con un perfil y una mascota ficticios. El primer intento se detuvo porque la base destino ya tenía el esquema `public`; en una segunda base nueva se excluyó solo la creación duplicada de ese esquema y la restauración terminó sin errores. Después de ejecutar `migrate` en la copia restaurada, quedaron siete registros de historial, un perfil y una mascota; el resumen de IDs, hashes y fechas del historial coincidió con el origen ficticio. Se conservaron ambas bases locales y el contenedor quedó detenido. No se restauró el historial real de staging ni se verificó la recuperación integral.
+
+**Ensayo limitado de Storage (14 de noviembre de 2026):** con autorización se creó en `petpulse-staging` el bucket separado `pet-photos-recovery-qa-20261114`, privado y con límite de 5 MB y tipos JPEG, PNG y WebP. Se subió un PNG ficticio de un píxel, se descargó desde el panel y se volvió a subir al mismo bucket con otro nombre; el archivo recuperado se descargó de nuevo y sus bytes coincidieron con el original mediante SHA-256. Una solicitud anónima a su URL pública fue rechazada. Se conservaron el bucket y los archivos de prueba. No se copiaron fotos existentes ni se verificaron rutas originales, integración con la aplicación, otro proyecto o recuperación integral; esta prueba no sustituye un respaldo externo coordinado ni una restauración completa.
+
+## Solicitudes manuales de datos y cuenta
+
+Para el lanzamiento inicial se eligió una gestión manual supervisada de exportación y eliminación. **Todavía no está lista para producción:** antes deben aprobarse la política de privacidad, la jurisdicción, las obligaciones de conservación, los plazos, el canal de solicitud, los responsables y un procedimiento ensayado en staging. No hay autoservicio implementado y esta guía no autoriza eliminar datos.
+
+1. Recibir la solicitud por el canal aprobado, verificar la identidad y el alcance sin pedir contraseñas ni códigos, y registrar un caso con acceso restringido. No prometer plazos ni eliminación inmediata antes de aprobar la política aplicable.
+2. Confirmar expresamente el entorno y relacionar el identificador de Clerk con el perfil interno correcto. Inventariar, según el rol y la solicitud: perfil y preferencias, mascotas y contacto de emergencia, fotos en Storage, QR, reportes de pérdida, perfil y recursos de proveedor, citas y avisos. Revisar también Clerk, registros, respaldos y proveedores externos cuando corresponda.
+3. Para una exportación, preparar únicamente los datos autorizados de la persona solicitante; revisar las citas compartidas para evitar revelar información de terceros. Excluir secretos, tokens QR y enlaces firmados activos. Acordar un medio de entrega seguro y la eliminación de copias temporales según la política aprobada.
+4. Antes de eliminar o anonimizar, revisar citas pendientes, comunicaciones en cola, datos compartidos y obligaciones de conservación. Definir qué hacer con cada conjunto de datos y obtener la aprobación del responsable; detener el proceso si no está claro. Las referencias en la base incluyen eliminaciones en cascada que pueden afectar citas y avisos de otros participantes: no borrar un perfil sin evaluar ese impacto.
+5. Ensayar el procedimiento aprobado con datos ficticios en un entorno aislado y verificar una restauración de respaldo. Diseñar y verificar por separado el tratamiento de los objetos de Storage, la identidad de Clerk y los datos de PostgreSQL: una transacción de base de datos no cubre todos esos servicios. Considerar copias de seguridad, registros y servicios externos sin afirmar su eliminación inmediata.
+6. Tras la ejecución autorizada, verificar cada sistema, documentar excepciones o fallos y comunicar el resultado por el canal seguro. Conservar solo la evidencia mínima conforme a la política aprobada.
+
+### Inventario preliminar para definir la política
+
+| Datos | Ubicación y consideración | Decisión pendiente |
+| --- | --- | --- |
+| Identidad, correo, teléfono y preferencias | Clerk y `petpulse_user_profiles`; el perfil interno referencia el ID de Clerk. | Finalidad, acceso, retención y tratamiento de ambas copias. |
+| Mascotas, contacto y QR | `petpulse_pets` y fotos privadas en Storage; QR y enlaces firmados son credenciales de acceso, no adjuntos para exportación. | Alcance de exportación, revocación y tratamiento de archivos y respaldos. |
+| Reportes de pérdida | `petpulse_lost_pet_reports`: descripción de ubicación, notas, consentimiento, estado y vencimiento. El vencimiento no equivale por sí solo a eliminación. | Plazo y tratamiento de reportes cerrados o vencidos y de su información de ubicación. |
+| Proveedores | `petpulse_provider_profiles`, servicios y disponibilidad; pueden contener datos de contacto y ubicación. | Tratamiento de información publicada y conservación tras solicitudes de cuenta. |
+| Citas y avisos | `petpulse_appointments` y `petpulse_appointment_notifications`; pueden involucrar a varias personas y contener destinos y mensajes. | Protección de terceros, citas futuras, obligaciones de conservación y tratamiento de mensajes en cola. |
+| Respaldos y registros | Copias de PostgreSQL, objetos, exportaciones de identidad y logs de plataformas. | Acceso, cifrado, plazos, restauración y tratamiento de solicitudes sin prometer borrado inmediato de cada copia. |
+
+Para cada fila debe aprobarse una finalidad, responsable, base aplicable, período o criterio de retención, procedimiento de acceso/exportación y tratamiento de solicitudes y excepciones. El equipo responsable debe validar jurisdicción y obligaciones legales; esta tabla no sustituye asesoría jurídica ni una política pública.
 
 ## Costos y límites
 
@@ -150,5 +203,9 @@ El manifiesto Render usa el plan gratuito para evitar crear recursos pagos por s
 - [Vercel: Vite](https://vercel.com/docs/frameworks/frontend/vite)
 - [Supabase: conexiones PostgreSQL](https://supabase.com/docs/guides/database/connecting-to-postgres)
 - [Supabase: Drizzle](https://supabase.com/docs/guides/database/drizzle)
+- [Supabase: respaldos y límites de Storage](https://supabase.com/docs/guides/platform/backups)
+- [Supabase: descarga de objetos](https://supabase.com/docs/guides/storage/management/download-objects)
+- [Supabase: esquema de Storage](https://supabase.com/docs/guides/storage/schema/design)
+- [Clerk: migración y exportación de usuarios](https://clerk.com/docs/guides/development/migrating/overview)
 - [Clerk: solicitudes autenticadas entre orígenes](https://clerk.com/docs/guides/development/making-requests)
 - [Clerk Express: `clerkMiddleware`](https://clerk.com/docs/expressjs/reference/clerk-middleware)
