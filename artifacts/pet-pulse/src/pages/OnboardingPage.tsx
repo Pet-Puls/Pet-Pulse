@@ -20,11 +20,11 @@ export default function OnboardingPage() {
   } } });
 
   if (!isLoaded) return <div className="onboarding-wrap"><LoadingPanel label="Cargando…"/></div>;
-  if (!isSignedIn) return <Redirect to="/"/>;
+  if (!isSignedIn) return <Redirect to="/" replace/>;
   if (!apiAuthReady) return <div className="onboarding-wrap"><LoadingPanel label="Preparando conexión segura…"/></div>;
   if (me.isLoading) return <div className="onboarding-wrap"><LoadingPanel/></div>;
   if (me.isError) return <div className="onboarding-wrap"><div style={{ width: 'min(680px,100%)' }}><ErrorPanel message={errorMessage(me.error)} retry={() => void me.refetch()}/></div></div>;
-  if (me.data?.onboardingCompleted) return <Redirect to="/workspace"/>;
+  if (me.data?.onboardingCompleted) return <Redirect to="/workspace" replace/>;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();

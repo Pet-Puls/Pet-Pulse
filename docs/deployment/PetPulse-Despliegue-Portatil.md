@@ -25,6 +25,8 @@ La web incluye un manifiesto PWA y puede instalarse desde un navegador compatibl
 
 El selector de la parte superior cambia entre tema claro y oscuro, conserva la preferencia en el navegador y actualiza el color sugerido para la barra del navegador compatible. La preferencia es local a cada navegador y dispositivo.
 
+Una sesión activa vuelve al espacio de la cuenta al abrir las rutas de acceso o registro; el botón **Salir** cierra la sesión para usar otra cuenta. Retroceder no cierra sesión, aunque el navegador puede salir de la aplicación y Clerk puede pedir acceso de nuevo si la sesión vence o se revoca. El registro lo gestiona Clerk y, después, PetPulse solicita nombre y rol en la configuración inicial; los métodos y la verificación disponibles dependen de la configuración de esa instancia.
+
 La aplicación necesita internet para sus operaciones. El service worker guarda únicamente una página estática de aviso sin conexión; no almacena respuestas de la API, sesiones, fotos ni páginas de usuario para uso offline. El aviso requiere que la aplicación se haya abierto con conexión al menos una vez y el service worker se haya instalado. El navegador puede eliminar su caché. El despliegue requiere HTTPS (o localhost para pruebas).
 
 ## Archivos de recreación

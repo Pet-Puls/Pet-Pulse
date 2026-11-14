@@ -38,8 +38,8 @@ function formatLocalDate(date: string) {
   }).format(new Date(`${date}T00:00:00.000Z`));
 }
 
-export default function DirectoryPage() {
-  const { isSignedIn } = useAuth();
+export default function DirectoryPage({ embedded = false }: { embedded?: boolean }) {
+  const { isLoaded, isSignedIn } = useAuth();
   const [searchText, setSearchText] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<ListPublicProvidersCategory | ''>('');
@@ -61,15 +61,15 @@ export default function DirectoryPage() {
   });
   const totalPages = Math.max(1, Math.ceil((providers.data?.total ?? 0) / pageSize));
 
-  return <div className="public-shell">
-    <header className="public-nav">
+  return <div className={embedded ? 'directory-embedded' : 'public-shell'}>
+    {!embedded && <header className="public-nav">
       <Brand/>
       <nav className="public-nav-actions" aria-label="Navegación">
         <Link className="public-link" href="/">Inicio</Link>
         <Link className="public-link" href="/map">Mapa cercano</Link>
-        <Link className="account-button" href="/sign-in">Iniciar sesión</Link>
+        {isLoaded && <Link className="account-button" href={isSignedIn ? '/workspace' : '/sign-in'}>{isSignedIn ? 'Ir a mi espacio' : 'Iniciar sesión'}</Link>}
       </nav>
-    </header>
+    </header>}
     <main className="directory-page">
       <div className="directory-heading">
         <div className="public-kicker">Una comunidad que cuida</div>

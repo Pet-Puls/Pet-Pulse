@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { ClerkProvider, useClerk } from '@clerk/react';
+import type { MeProfile } from '@workspace/api-client-react';
 import {
   QueryClientProvider, useQueryClient,
 } from '@tanstack/react-query';
@@ -52,6 +53,20 @@ function RouteLoadingState() {
   return <main className="account-content"><LoadingPanel label="Preparando esta sección…"/></main>;
 }
 
+function WorkspaceRoutes({ me }: { me: MeProfile }) {
+  return <Suspense fallback={<LoadingPanel label="Preparando esta sección…"/>}><Switch>
+    <Route path="/workspace/appointments"><AppointmentsPage me={me}/></Route>
+    <Route path="/workspace"><WorkspaceHomePage me={me}/></Route>
+    <Route path="/workspace/map"><WorkspaceMapPage/></Route>
+    <Route path="/workspace/lost-pets"><LostPetsPage me={me}/></Route>
+    <Route path="/workspace/directory"><DirectoryPage embedded/></Route>
+    <Route path="/workspace/pets">{me.role === 'owner' ? <PetsPage/> : <Redirect to="/workspace" replace/>}</Route>
+    <Route path="/workspace/provider">{me.role === 'provider' ? <ProviderPage/> : <Redirect to="/workspace" replace/>}</Route>
+    <Route path="/workspace/admin">{me.role === 'admin' ? <AdminPage/> : <Redirect to="/workspace" replace/>}</Route>
+    <Route><NotFound/></Route>
+  </Switch></Suspense>;
+}
+
 function RouterContent() {
   const [, setLocation] = useLocation();
 
@@ -71,18 +86,12 @@ function RouterContent() {
         <Route path="/" component={PublicHomePage}/>
         <Route path="/sign-in/*?" component={SignInPage}/>
         <Route path="/sign-up/*?" component={SignUpPage}/>
-        <Route path="/demo/*?" component={() => <DemoApp/>}/>
+        <Route path="/demo/*?"><DemoApp/></Route>
         <Route path="/pet/:token">{params => <PublicPetPage token={params.token}/>}</Route>
         <Route path="/onboarding" component={OnboardingPage}/>
-        <Route path="/workspace/appointments"><PrivateRoute>{me => <AppointmentsPage me={me}/>}</PrivateRoute></Route>
-        <Route path="/workspace"><PrivateRoute>{me => <WorkspaceHomePage me={me}/>}</PrivateRoute></Route>
-        <Route path="/workspace/map"><PrivateRoute>{() => <WorkspaceMapPage/>}</PrivateRoute></Route>
-        <Route path="/workspace/lost-pets"><PrivateRoute>{me => <LostPetsPage me={me}/>}</PrivateRoute></Route>
-        <Route path="/workspace/pets"><PrivateRoute role="owner">{() => <PetsPage/>}</PrivateRoute></Route>
-        <Route path="/workspace/provider"><PrivateRoute role="provider">{() => <ProviderPage/>}</PrivateRoute></Route>
-        <Route path="/workspace/admin"><PrivateRoute role="admin">{() => <AdminPage/>}</PrivateRoute></Route>
+        <Route path="/workspace/*?"><PrivateRoute>{me => <WorkspaceRoutes me={me}/>}</PrivateRoute></Route>
         <Route path="/map" component={WorkspaceMapPage}/>
-        <Route path="/directory" component={DirectoryPage}/>
+        <Route path="/directory"><DirectoryPage/></Route>
         <Route path="/pets"><Redirect to="/demo/pets"/></Route>
         <Route path="/services"><Redirect to="/demo/services"/></Route>
         <Route path="/admin"><Redirect to="/demo/admin"/></Route>

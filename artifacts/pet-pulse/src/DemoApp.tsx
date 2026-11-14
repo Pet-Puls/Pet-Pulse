@@ -43,7 +43,7 @@ const seedAppointments: Appointment[] = [
 ];
 const navigation = [
   { path: '/', label: 'Inicio', icon: Home },
-  { path: '/map', label: 'Mapa en vivo', icon: MapPin },
+  { path: '/map', label: 'Mapa simulado', icon: MapPin },
   { path: '/pets', label: 'Mis mascotas', icon: PawPrint },
   { path: '/directory', label: 'Directorio', icon: Search },
   { path: '/services', label: 'Servicios', icon: CalendarDays },
@@ -51,7 +51,7 @@ const navigation = [
 ];
 const roleText: Record<Role, string> = { owner: 'Persona tutora', provider: 'Proveedor local', admin: 'Administración' };
 const roleGreeting: Record<Role, string> = { owner: 'Qué bueno tenerte por aquí', provider: 'Tu comunidad te espera', admin: 'Todo bajo control' };
-const pageTitle: Record<string, string> = { '/': 'Inicio', '/map': 'Mapa en vivo', '/pets': 'Mis mascotas', '/directory': 'Directorio local', '/services': 'Servicios y citas', '/admin': 'Operaciones' };
+const pageTitle: Record<string, string> = { '/': 'Inicio', '/map': 'Mapa simulado', '/pets': 'Mis mascotas', '/directory': 'Directorio local', '/services': 'Servicios y citas', '/admin': 'Operaciones' };
 function readSaved<T>(key: string, fallback: T): T {
   try { const value = localStorage.getItem(`petpulse-${key}`); return value ? JSON.parse(value) as T : fallback; } catch { return fallback; }
 }
@@ -182,16 +182,14 @@ function PetPage({ state }: { state: State }) {
 }
 
 function MapPage({ state }: { state: State }) {
-  const [tick, setTick] = useState(0);
-  const move = () => { setTick(t => t + 1); state.setPets(prev => prev.map((p, i) => p.status === 'walking' ? { ...p, x: Math.max(16, Math.min(84, p.x + (i % 2 ? 7 : -5))), y: Math.max(19, Math.min(80, p.y + (i % 2 ? -5 : 6))) } : p)); state.notify('Ubicaciones simuladas actualizadas.'); };
-  const offsets = [0, 1];
-  return <main className="content"><Heading eyebrow="Tu barrio, de un vistazo" title="Mapa en vivo" desc="Mascotas y lugares de cuidado cercanos, en un mapa de demostración." action={<button className="btn" onClick={move} data-testid="button-move-pets"><Navigation size={15}/> Simular movimiento</button>}/>
-    <div className="grid grid-3" style={{ gridTemplateColumns: 'minmax(0,2fr) minmax(220px,1fr)', alignItems: 'start' }}><div><div className="map-board" data-testid="map-simulated"><div className="map-grid"/><span className="map-label" style={{ top: '18%', left: '12%' }}>MALASAÑA</span><span className="map-label" style={{ top: '40%', left: '67%' }}>CHAMBERÍ</span><span className="map-label" style={{ top: '80%', left: '17%' }}>LA LATINA</span><span className="map-label" style={{ top: '70%', left: '69%' }}>LAVAPIÉS</span>
-      {state.pets.map((pet, i) => <button key={pet.id} className={`map-pin ${pet.status === 'lost' ? 'lost' : ''}`} style={{ left: `${Math.max(8, Math.min(92, pet.x + (tick && pet.status === 'walking' ? offsets[i % 2] : 0)))}%`, top: `${pet.y}%` }} title={`${pet.name}: ${pet.status}`} data-testid={`map-pet-${pet.id}`} onClick={() => state.notify(`${pet.name} · ${pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Alerta activa'}`)}><PawPrint size={13}/>{pet.name}</button>)}
-      {state.providers.slice(0, 4).map(p => <button key={p.id} className="map-pin provider" style={{ left: `${p.x}%`, top: `${p.y}%` }} onClick={() => state.notify(`${p.name} · ${p.category}`)} data-testid={`map-provider-${p.id}`}><MapPin size={12}/>{p.name.split(' ')[0]}</button>)}
+  const move = () => { state.setPets(prev => prev.map((p, i) => p.status === 'walking' ? { ...p, x: Math.max(16, Math.min(84, p.x + (i % 2 ? 7 : -5))), y: Math.max(19, Math.min(80, p.y + (i % 2 ? -5 : 6))) } : p)); state.notify('Ubicaciones simuladas actualizadas.'); };
+  return <main className="content"><Heading eyebrow="Tu barrio, de un vistazo" title="Mapa simulado" desc="Mascotas y lugares de cuidado de muestra, en una vista de demostración." action={<button className="btn" onClick={move} data-testid="button-move-pets"><Navigation size={15}/> Simular movimiento</button>}/>
+    <div className="grid demo-map-layout"><div><div className="map-board" data-testid="map-simulated"><div className="map-grid"/>
+      {state.pets.map(pet => <button key={pet.id} className={`map-pin ${pet.status === 'lost' ? 'lost' : ''}`} title={`${pet.name}: ${pet.status}`} data-testid={`map-pet-${pet.id}`} onClick={() => state.notify(`${pet.name} · ${pet.status === 'home' ? 'En casa' : pet.status === 'walking' ? 'De paseo' : 'Alerta activa'}`)}><PawPrint size={15}/><span>{pet.name}<small>Posición {pet.x}, {pet.y}</small></span></button>)}
+      {state.providers.slice(0, 4).map(p => <button key={p.id} className="map-pin provider" onClick={() => state.notify(`${p.name} · ${p.category}`)} data-testid={`map-provider-${p.id}`}><MapPin size={15}/><span>{p.name}<small>{p.category}</small></span></button>)}
     </div><div className="map-key" style={{ marginTop: 13 }}><span><i className="dot"/>Mascota</span><span><i className="dot gold"/>Proveedor local</span><span><i className="dot red"/>Alerta</span></div></div>
     <aside className="panel"><div className="eyebrow">En tu zona</div><h2 className="display">La red cercana</h2><p className="subtle">Una muestra de personas y lugares de cuidado.</p>{state.pets.map(p => <div className="appointment" key={p.id}><div className="stat-icon"><PawPrint size={16}/></div><div className="appointment-main"><strong>{p.name}</strong><p>{p.status === 'home' ? 'En casa' : p.status === 'walking' ? 'De paseo · ubicación aproximada' : 'Alerta de mascota perdida'}</p></div><span className={`status ${p.status}`}>{p.status === 'home' ? 'Casa' : p.status === 'walking' ? 'Paseo' : 'Alerta'}</span></div>)}<Link className="btn ghost" href="/directory" style={{ width: '100%', marginTop: 14 }}><Search size={15}/> Ver proveedores cercanos</Link></aside></div>
-    <div className="notice" style={{ marginTop: 19 }}><LocateFixed size={16}/> <span>Ubicaciones ilustrativas en Medellín. No se solicita acceso a GPS y no hay seguimiento real.</span></div>
+    <div className="notice" style={{ marginTop: 19 }}><LocateFixed size={16}/> <span>Las posiciones son valores de demostración, no ubicaciones reales. No se solicita acceso a GPS ni hay seguimiento real.</span></div>
   </main>;
 }
 
@@ -220,7 +218,7 @@ function ServicesPage({ state }: { state: State }) {
   const isProvider = state.role === 'provider';
   return <main className="content"><Heading eyebrow={isProvider ? 'Tu agenda profesional' : 'Rutinas que les hacen bien'} title={isProvider ? 'Servicios y agenda' : 'Citas y servicios'} desc={isProvider ? 'Gestiona tu oferta y revisa las próximas solicitudes.' : 'Organiza sus cuidados y descubre qué puedes reservar.'} action={isProvider ? <button className="btn" onClick={() => setShowService(true)} data-testid="button-add-service"><Plus size={16}/> Añadir servicio</button> : <Link href="/directory" className="btn" data-testid="button-find-service"><Search size={15}/> Encontrar un servicio</Link>}/>
     {isProvider && <section className="panel" style={{ marginBottom: 19, background: '#e8f0e5' }}><div className="eyebrow">Tu espacio de proveedor</div><h2 className="display">Una buena experiencia empieza aquí.</h2><p className="subtle">Añade servicios para que las personas de tu zona sepan en qué puedes ayudarles.</p><button className="btn secondary" onClick={() => setShowService(true)}><Plus size={15}/> Publicar un servicio</button></section>}
-    <div className="grid grid-2" style={{ gridTemplateColumns: 'minmax(0,1.3fr) minmax(260px,.7fr)' }}><section className="panel"><div className="section-row" style={{ marginTop: 0 }}><div><div className="eyebrow">Agenda compartida</div><h2 className="display">Próximas citas</h2></div><select className="field" style={{ width: 138 }} value={filter} onChange={e => setFilter(e.target.value)} aria-label="Filtrar citas" data-testid="select-appointment-filter"><option>Todas</option><option>Confirmada</option><option>Pendiente</option><option>Cancelada</option></select></div>{visible.length ? visible.map(a => <AppointmentRow key={a.id} appointment={a} provider={state.providers.find(p => p.id === a.providerId)}/>) : <Empty icon={CalendarDays} title="Agenda despejada" text="Las nuevas citas aparecerán aquí."/ >}</section><aside><section className="panel" style={{ background: '#f3e6cb' }}><div className="stat-icon"><Clock3 size={17}/></div><h2 className="display" style={{ marginTop: 13 }}>Un paso a la vez.</h2><p className="subtle">Las solicitudes nuevas se muestran como pendientes hasta que el profesional las confirme.</p><Link href="/directory" className="text-link">Explorar directorio <ArrowRight size={14}/></Link></section><section className="panel" style={{ marginTop: 15 }}><div className="eyebrow">En la red local</div><strong className="display" style={{ fontSize: 24 }}>{state.providers.length} profesionales</strong><p className="subtle" style={{ margin: '6px 0 15px' }}>disponibles en la muestra de Medellín</p><Link href="/map" className="btn ghost small"><MapPin size={14}/> Ver en el mapa</Link></section></aside></div>
+    <div className="grid demo-services-layout"><section className="panel"><div className="section-row" style={{ marginTop: 0 }}><div><div className="eyebrow">Agenda compartida</div><h2 className="display">Próximas citas</h2></div><select className="field" style={{ width: 138 }} value={filter} onChange={e => setFilter(e.target.value)} aria-label="Filtrar citas" data-testid="select-appointment-filter"><option>Todas</option><option>Confirmada</option><option>Pendiente</option><option>Cancelada</option></select></div>{visible.length ? visible.map(a => <AppointmentRow key={a.id} appointment={a} provider={state.providers.find(p => p.id === a.providerId)}/>) : <Empty icon={CalendarDays} title="Agenda despejada" text="Las nuevas citas aparecerán aquí."/ >}</section><aside><section className="panel" style={{ background: '#f3e6cb' }}><div className="stat-icon"><Clock3 size={17}/></div><h2 className="display" style={{ marginTop: 13 }}>Un paso a la vez.</h2><p className="subtle">Las solicitudes nuevas se muestran como pendientes hasta que el profesional las confirme.</p><Link href="/directory" className="text-link">Explorar directorio <ArrowRight size={14}/></Link></section><section className="panel" style={{ marginTop: 15 }}><div className="eyebrow">En la red local</div><strong className="display" style={{ fontSize: 24 }}>{state.providers.length} profesionales</strong><p className="subtle" style={{ margin: '6px 0 15px' }}>disponibles en la muestra de Medellín</p><Link href="/map" className="btn ghost small"><MapPin size={14}/> Ver en el mapa</Link></section></aside></div>
     {showService && <Modal title="Publicar un servicio" onClose={() => setShowService(false)}><p className="subtle">Agrega una opción a la ficha de tu negocio. El cambio se guarda en este dispositivo.</p><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const title = String(f.get('title')).trim(); const provider = state.providers.find(p => p.id === providerId) || state.providers[0]; if (!title || !provider) return; state.setProviders(prev => prev.map(p => p.id === provider.id ? { ...p, services: [...p.services, title] } : p)); setShowService(false); state.notify(`Servicio «${title}» añadido a ${provider.name}.`); }}><div className="form-grid"><Field label="Establecimiento" full><select className="field" value={providerId} onChange={e => setProviderId(e.target.value)} data-testid="select-service-provider">{state.providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field><Field label="Nombre del servicio"><input className="field" name="title" required placeholder="Ej. Baño y cepillado" data-testid="input-service-name"/></Field><Field label="Categoría"><select className="field" name="category" data-testid="select-service-category"><option>Cuidado</option><option>Veterinaria</option><option>Paseo</option><option>Guardería</option></select></Field></div><div className="form-actions"><button type="button" className="btn ghost" onClick={() => setShowService(false)}>Cancelar</button><button className="btn" type="submit" data-testid="button-save-service"><Plus size={15}/> Añadir a servicios</button></div></form></Modal>}
   </main>;
 }
@@ -237,12 +235,12 @@ function AdminPage({ state }: { state: State }) {
 function Router() {
   const [location] = useLocation();
   return <AppState>{state => <Shell state={state}><ErrorBoundary resetKey={location}><Switch>
-    <Route path="/" component={() => <HomePage state={state}/>}/>
-    <Route path="/map" component={() => <MapPage state={state}/>}/>
-    <Route path="/pets" component={() => <PetPage state={state}/>}/>
-    <Route path="/directory" component={() => <DirectoryPage state={state}/>}/>
-    <Route path="/services" component={() => <ServicesPage state={state}/>}/>
-    <Route path="/admin" component={() => <AdminPage state={state}/>}/>
+    <Route path="/"><HomePage state={state}/></Route>
+    <Route path="/map"><MapPage state={state}/></Route>
+    <Route path="/pets"><PetPage state={state}/></Route>
+    <Route path="/directory"><DirectoryPage state={state}/></Route>
+    <Route path="/services"><ServicesPage state={state}/></Route>
+    <Route path="/admin"><AdminPage state={state}/></Route>
     <Route component={NotFound}/>
   </Switch></ErrorBoundary></Shell>}</AppState>;
 }

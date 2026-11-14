@@ -42,7 +42,7 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
     { href: '/workspace', label: 'Resumen', icon: Home },
     { href: '/workspace/map', label: 'Mapa', icon: MapPin },
     { href: '/workspace/lost-pets', label: 'Perdidas', icon: AlertTriangle },
-    { href: '/directory', label: 'Directorio', icon: Store },
+    { href: '/workspace/directory', label: 'Directorio', icon: Store },
     ...(['owner', 'provider'].includes(me.role) ? [{ href: '/workspace/appointments', label: 'Citas', icon: CalendarClock }] : []),
     ...(me.role === 'owner' ? [{ href: '/workspace/pets', label: 'Mascotas', icon: PawPrint }] : []),
     ...(me.role === 'provider' ? [{ href: '/workspace/provider', label: 'Mi perfil', icon: Store }] : []),
@@ -60,18 +60,17 @@ export function AccountFrame({ me, children }: { me: MeProfile; children: ReactN
   </div>;
 }
 
-export function PrivateRoute({ children, role }: { children: (me: MeProfile) => ReactNode; role?: MeProfile['role'] }) {
+export function PrivateRoute({ children }: { children: (me: MeProfile) => ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const apiAuthReady = useApiAuthReady();
   const me = useGetMe({ query: { enabled: isLoaded && isSignedIn === true && apiAuthReady, queryKey: getGetMeQueryKey(), retry: false } });
 
   if (!isLoaded) return <main className="account-content"><LoadingPanel label="Comprobando sesión…"/></main>;
-  if (!isSignedIn) return <Redirect to="/" />;
+  if (!isSignedIn) return <Redirect to="/" replace/>;
   if (!apiAuthReady) return <main className="account-content"><LoadingPanel label="Preparando conexión segura…"/></main>;
   if (me.isLoading) return <main className="account-content"><LoadingPanel/></main>;
   if (me.isError) return <main className="account-content"><ErrorPanel message={errorMessage(me.error)} retry={() => void me.refetch()}/></main>;
   if (!me.data) return <main className="account-content"><LoadingPanel/></main>;
-  if (!me.data.onboardingCompleted) return <Redirect to="/onboarding"/>;
-  if (role && me.data.role !== role) return <Redirect to="/workspace"/>;
+  if (!me.data.onboardingCompleted) return <Redirect to="/onboarding" replace/>;
   return <AccountFrame me={me.data}>{children(me.data)}</AccountFrame>;
 }

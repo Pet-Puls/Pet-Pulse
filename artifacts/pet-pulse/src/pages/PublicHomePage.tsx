@@ -5,13 +5,23 @@ import {
 } from 'lucide-react';
 import { Link, Redirect } from 'wouter';
 import { useApiAuthReady } from '@/app/auth';
-import { ActionLink, Brand } from '@/components/app-shared';
+import { ActionLink, Brand, ErrorPanel, LoadingPanel, errorMessage } from '@/components/app-shared';
 
 export default function PublicHomePage() {
   const { isLoaded, isSignedIn } = useAuth();
   const apiAuthReady = useApiAuthReady();
   const me = useGetMe({ query: { enabled: isLoaded && isSignedIn === true && apiAuthReady, queryKey: getGetMeQueryKey(), retry: false } });
-  if (isLoaded && isSignedIn && apiAuthReady && me.data) return <Redirect to={me.data.onboardingCompleted ? '/workspace' : '/onboarding'} />;
+  if (!isLoaded || (isSignedIn && (!apiAuthReady || me.isLoading))) {
+    return <main className="account-content"><LoadingPanel label="Comprobando sesión…"/></main>;
+  }
+  if (isSignedIn && me.isError) {
+    return <main className="account-content"><ErrorPanel message={errorMessage(me.error)} retry={() => void me.refetch()}/></main>;
+  }
+  if (isSignedIn) {
+    return me.data
+      ? <Redirect to={me.data.onboardingCompleted ? '/workspace' : '/onboarding'} replace/>
+      : <main className="account-content"><LoadingPanel/></main>;
+  }
 
   return <div className="public-shell">
     <header className="public-nav"><Brand /><nav className="public-nav-actions" aria-label="Acceso">
