@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { esES } from '@clerk/localizations/es-ES';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
@@ -79,6 +80,14 @@ export const clerkAppearance = {
 };
 
 export const clerkLocalization = {
-  signIn: { start: { title: 'Qué gusto verte', subtitle: 'Entra a tu espacio PetPulse' } },
-  signUp: { start: { title: 'Cuidemos en comunidad', subtitle: 'Crea tu cuenta PetPulse' } },
+  ...esES,
+  formFieldInputPlaceholder__signUpPassword: 'Crea una contraseña',
+  signIn: {
+    ...esES.signIn,
+    start: { ...esES.signIn?.start, title: 'Qué gusto verte', subtitle: 'Entra a tu espacio PetPulse' },
+  },
+  signUp: {
+    ...esES.signUp,
+    start: { ...esES.signUp?.start, title: 'Cuidemos en comunidad', subtitle: 'Crea tu cuenta PetPulse' },
+  },
 };

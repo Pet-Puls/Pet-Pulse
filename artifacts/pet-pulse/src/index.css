@@ -392,7 +392,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 }
 
 .app-preferences { position:relative; z-index:45; min-height:38px; display:flex; justify-content:flex-end; align-items:flex-start; gap:12px; padding:5px 16px; background:#e9eee4; color:#214b42; font-size:12px; }
-.auth-screen { position:relative; grid-template-columns:minmax(0,440px); padding-top:80px; }
+.auth-screen { position:relative; grid-template-columns:min(440px,100%); justify-content:center; padding-top:80px; }
 .auth-screen > div { min-width:0; width:100%; }
 .app-preferences button,.app-preferences summary { border:0; border-radius:8px; padding:5px 9px; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer; }
 .app-preferences button:hover,.app-preferences summary:hover { background:#d6e5d7; }
