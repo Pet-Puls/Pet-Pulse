@@ -80,6 +80,16 @@ describe("appointment email worker", () => {
     expect(mocks.whereSelect).not.toHaveBeenCalled();
   });
 
+  it("does not process the queue in disabled mode even when SMTP is configured", () => {
+    vi.stubEnv("APPOINTMENT_EMAIL_TRANSPORT", "disabled");
+    vi.stubEnv("GMAIL_SMTP_USER", "sender@example.com");
+    vi.stubEnv("GMAIL_SMTP_APP_PASSWORD", "test-password");
+    startAppointmentEmailWorker();
+    expect(mocks.whereUpdate).not.toHaveBeenCalled();
+    expect(mocks.whereSelect).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("preserves the existing SMTP worker when its credentials are configured", async () => {
     vi.stubEnv("GMAIL_SMTP_USER", "sender@example.com");
     vi.stubEnv("GMAIL_SMTP_APP_PASSWORD", "test-password");

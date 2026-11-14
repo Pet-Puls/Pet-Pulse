@@ -12,11 +12,15 @@ const batchSize = 10;
 
 function createTransport() {
   const mode = process.env.APPOINTMENT_EMAIL_TRANSPORT?.trim() || "smtp";
+  if (mode === "disabled") {
+    logger.warn("Appointment email delivery is disabled; notifications will remain queued.");
+    return null;
+  }
   if (mode === "gmail-api") {
     return createGmailApiTransport();
   }
   if (mode !== "smtp") {
-    throw new Error("APPOINTMENT_EMAIL_TRANSPORT must be smtp or gmail-api.");
+    throw new Error("APPOINTMENT_EMAIL_TRANSPORT must be disabled, smtp or gmail-api.");
   }
   const username = process.env.GMAIL_SMTP_USER?.trim();
   const appPassword = process.env.GMAIL_SMTP_APP_PASSWORD?.replace(/\s/g, "");

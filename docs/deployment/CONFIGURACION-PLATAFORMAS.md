@@ -112,7 +112,8 @@ Crear un **Blueprint** desde el repositorio de GitHub. Render leerá
 | `GMAIL_SMTP_APP_PASSWORD` | Contraseña de aplicación para SMTP | Sí |
 | `GMAIL_FROM_NAME` | Nombre visible, por ejemplo `Monka` | No |
 
-Sin configuración de correo, los avisos quedan en la outbox. El transporte SMTP
+Con `APPOINTMENT_EMAIL_TRANSPORT=disabled` o sin configuración de correo, los
+avisos quedan en la outbox y el worker no procesa la cola. El transporte SMTP
 existente se conserva, pero **Render Free bloquea sus puertos**, de modo que no
 sirve allí. Los avisos automáticos de WhatsApp están fuera del alcance: no se
 crean nuevos y los diferidos anteriores se conservan sin envío. Los enlaces de
@@ -123,9 +124,11 @@ contacto de WhatsApp de proveedores siguen disponibles.
 El transporte `gmail-api` usa HTTPS y OAuth, pero permanece inactivo mientras
 no se seleccione explícitamente. Solo está preparado para un ensayo limitado,
 no para habilitar correo general. Antes de configurarlo, revisar la cola y
-obtener autorización para enviar a una cuenta de prueba. La selección de SMTP
-por defecto mantiene el comportamiento anterior: si sus dos credenciales ya
-están configuradas, el worker SMTP puede procesar la cola.
+obtener autorización para enviar a una cuenta de prueba. La selección de SMTP por defecto mantiene el comportamiento anterior: si sus
+dos credenciales ya están configuradas, el worker SMTP puede procesar la cola.
+El manifiesto establece `disabled` para staging; para un servicio Render ya
+creado, comprobar que el valor también esté guardado en su entorno antes de
+desplegar el código que lo reconoce.
 
 Para el ensayo se necesitan estas variables en el servicio de **staging**:
 

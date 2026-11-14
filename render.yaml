@@ -80,5 +80,7 @@ services:
         sync: false
       - key: GMAIL_SMTP_APP_PASSWORD
         sync: false
+      - key: APPOINTMENT_EMAIL_TRANSPORT
+        value: disabled
       - key: GMAIL_FROM_NAME
         value: Monka
