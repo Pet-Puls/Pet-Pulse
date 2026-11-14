@@ -19,6 +19,11 @@ function worker() {
 }
 
 describe('offline service worker', () => {
+  it('requests the manifest with credentials for protected preview deployments', () => {
+    const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+    expect(html).toMatch(/<link\s+rel="manifest"[^>]*crossorigin="use-credentials"/);
+  });
+
   it('caches only the static offline page during installation', async () => {
     const { handlers, cache } = worker();
     let task: Promise<void> | undefined;
