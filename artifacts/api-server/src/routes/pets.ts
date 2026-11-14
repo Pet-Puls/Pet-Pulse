@@ -142,6 +142,10 @@ router.patch(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
+    if (Object.keys(parsed.data).length === 0) {
+      res.status(400).json({ error: "Indica al menos un campo para actualizar." });
+      return;
+    }
     if (
       (parsed.data.name !== undefined && !parsed.data.name.trim()) ||
       (parsed.data.species !== undefined && !parsed.data.species.trim())

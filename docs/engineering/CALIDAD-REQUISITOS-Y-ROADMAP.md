@@ -41,6 +41,8 @@ El 14 de noviembre de 2026 se comprobó en staging la configuración de registro
 
 La validación local de reportes exige una fecha y hora existentes en formato ISO 8601 con zona horaria al crear o renovar; rechaza valores nulos, numéricos o fechas imposibles antes de guardarlos. Se mantiene la comprobación de que la fecha no sea futura.
 
+La validación local de citas exige fechas de calendario válidas en formato `AAAA-MM-DD`, tanto para reservar como para proponer cambios. La edición de mascotas rechaza solicitudes sin ningún campo reconocido en lugar de devolver un error interno. Estas correcciones requieren publicarse y probarse en staging.
+
 El esquema local ya incluye catálogo de servicios, disponibilidad semanal/excepciones, citas, preferencias de WhatsApp y outbox. Las migraciones `0003_provider_services_and_availability.sql`, `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` se aplicaron y verificaron en staging el 13 de noviembre de 2026; no se han aplicado en producción. Los avisos automáticos de WhatsApp se retiraron del alcance; los registros diferidos anteriores se conservan sin envío y no se crean nuevos. Los enlaces de contacto de proveedores permanecen disponibles. El correo necesita una alternativa compatible con Render Free, que bloquea SMTP.
 
 ## 3. Hallazgos de ingeniería y acciones

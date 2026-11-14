@@ -206,6 +206,18 @@ describe("API authorization middleware", () => {
     expect(mocks.pets).toEqual([]);
   });
 
+  it.each([{}, { unexpectedField: "ignored" }])("rejects pet updates without supported fields", async body => {
+    addProfile("owner-user", "owner");
+    const response = await fetch(`${baseUrl}/api/pets/550e8400-e29b-41d4-a716-446655440000`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify(body),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Indica al menos un campo para actualizar." });
+  });
+
   it("accepts and trims valid pet names and species", async () => {
     addProfile("owner-user", "owner");
     const response = await fetch(`${baseUrl}/api/pets`, {

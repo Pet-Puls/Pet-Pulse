@@ -338,6 +338,37 @@ async function requestAppointment(time: string, userId = "owner-one") {
 }
 
 describe("appointment routes", () => {
+  it("rejects non-string and impossible booking dates without creating a reservation", async () => {
+    for (const date of [new Date(`${bookingDate}T00:00:00.000Z`).getTime(), null, "2099-02-29"]) {
+      const response = await fetch(`${baseUrl}/api/appointments`, {
+        method: "POST",
+        headers: headers("owner-one"),
+        body: JSON.stringify({ providerId, serviceId, petId, date, time: "10:00" }),
+      });
+      expect(response.status, `date: ${date}`).toBe(400);
+    }
+    expect(mocks.appointments).toHaveLength(0);
+    expect(mocks.notifications).toHaveLength(0);
+  });
+
+  it("rejects non-string rescheduling dates without changing the appointment", async () => {
+    const created = await requestAppointment("10:00");
+    expect(created.status).toBe(201);
+    const appointment = await created.json() as { id: string };
+    const response = await fetch(`${baseUrl}/api/appointments/${appointment.id}/actions`, {
+      method: "POST",
+      headers: headers("provider-one"),
+      body: JSON.stringify({
+        action: "propose_reschedule",
+        date: new Date(`${bookingDate}T00:00:00.000Z`).getTime(),
+        time: "11:00",
+      }),
+    });
+    expect(response.status).toBe(400);
+    expect(mocks.appointments[0].status).toBe("pending");
+    expect(mocks.notifications).toHaveLength(2);
+  });
+
   it("prevents overlapping reservations and applies participant-only rescheduling", async () => {
     const created = await requestAppointment("10:00");
     expect(created.status, await created.clone().text()).toBe(201);

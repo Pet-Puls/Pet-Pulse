@@ -45,7 +45,6 @@ function hasInvalidDateOnly(body: unknown): boolean {
     body !== null &&
     typeof body === "object" &&
     "date" in body &&
-    typeof body.date === "string" &&
     !isValidDateOnly(body.date)
   );
 }
