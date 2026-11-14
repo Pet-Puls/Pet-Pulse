@@ -390,3 +390,60 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
   .account-mobile-nav { padding-right: 4px; padding-left: 4px; }
   .account-mobile-nav a { font-size: 9px; }
 }
+
+.app-preferences { position:relative; z-index:45; min-height:38px; display:flex; justify-content:flex-end; align-items:flex-start; gap:12px; padding:5px 16px; background:#e9eee4; color:#214b42; font-size:12px; }
+.auth-screen { position:relative; grid-template-columns:minmax(0,440px); padding-top:80px; }
+.auth-screen > div { min-width:0; width:100%; }
+.app-preferences button,.app-preferences summary { border:0; border-radius:8px; padding:5px 9px; background:transparent; color:inherit; font:inherit; font-weight:700; cursor:pointer; }
+.app-preferences button:hover,.app-preferences summary:hover { background:#d6e5d7; }
+.app-preferences details p { width:min(340px,calc(100vw - 160px)); margin:6px 0; padding:12px; border:1px solid #dfe3d8; border-radius:12px; background:#fffdf7; color:#214b42; line-height:1.5; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: 163 28% 11%;
+  --foreground: 140 21% 91%;
+  --card: 160 25% 17%;
+  --card-foreground: 140 21% 91%;
+  --popover: 160 25% 17%;
+  --popover-foreground: 140 21% 91%;
+  --primary: 155 35% 64%;
+  --primary-foreground: 163 28% 11%;
+  --secondary: 39 44% 34%;
+  --secondary-foreground: 40 60% 95%;
+  --muted: 160 20% 23%;
+  --muted-foreground: 145 14% 75%;
+  --accent: 14 55% 52%;
+  --accent-foreground: 0 0% 100%;
+  --border: 155 16% 32%;
+  --input: 155 16% 32%;
+  --ring: 155 35% 64%;
+}
+:root[data-theme="dark"] .app-preferences { background:#142d28; color:#e7f2e9; }
+:root[data-theme="dark"] .app-preferences button:hover,
+:root[data-theme="dark"] .app-preferences summary:hover { background:#315248; }
+:root[data-theme="dark"] .app-preferences details p { background:#203b34; border-color:#476258; color:#edf5ee; }
+:root[data-theme="dark"] :is(.public-shell,.account-layout,.onboarding-wrap,.auth-screen,.public-pet-page) { background:#142d28; color:#edf5ee; }
+:root[data-theme="dark"] :is(.account-topbar,.topbar,.account-mobile-nav) { background:#1b3831; border-color:#405e51; color:#edf5ee; }
+:root[data-theme="dark"] :is(.account-panel,.directory-card,.onboarding-card,.public-pet-card,.panel,.modal) { background:#203b34; border-color:#405e51; color:#edf5ee; }
+:root[data-theme="dark"] :is(.account-panel,.panel)[style] { background:#203b34 !important; }
+:root[data-theme="dark"] :is(.account-panel,.onboarding-card,.account-topbar,.crumb) :is(h1,h2,h3,strong)[style] { color:#edf5ee !important; }
+:root[data-theme="dark"] :is(.public-brand,.public-link,.public-copy h1,.public-section-head h2,.directory-heading h1,.directory-card h2,.directory-empty h2,.account-heading h1,.account-stat-value,.pet-description h3,.admin-row h3,.nearby-places-panel h2,.nearby-place-info strong,.map-empty-state strong,.provider-resources-heading h2,.provider-service-row h3,.provider-schedule-group h3,.appointment-section-title,.appointment-card-title h3,.public-pet-card h1,.empty-box h3) { color:#edf5ee; }
+:root[data-theme="dark"] .account-side .public-brand { color:#f6f0dc; }
+:root[data-theme="dark"] :is(.subtle,.public-copy p,.directory-heading p,.directory-description,.directory-neighborhood,.directory-result-count,.directory-pagination,.provider-service-row p,.account-heading p,.account-stat-label,.account-stat-note,.account-field label,.account-field small,.account-form-hint,.pet-description p,.admin-row p,.nearby-place-info span,.nearby-place-info small,.map-data-note,.map-privacy-note,.workspace-map-toolbar,.workspace-map-attribution,.empty-box,.public-pet-species,.auth-aside-copy,.appointment-time,.appointment-details,.appointment-card-title p,.pet-contact-consent small) { color:#c0d0c4; }
+:root[data-theme="dark"] :is(.account-kicker,.public-kicker,.eyebrow,.directory-approved,.text-link,.directory-provider-links a,.nearby-place-info a) { color:#add9bd; }
+:root[data-theme="dark"] :is(.account-field input,.account-field textarea,.account-field select,.field,.directory-search,.directory-category select,.map-search-input,.map-category-filter .field,.provider-window-row select,.provider-window-row input,.provider-exception-row > input,.appointment-reschedule-form input,.role-select select) { background:#142d28; border-color:#587266; color:#edf5ee; }
+:root[data-theme="dark"] :is(.directory-search input,.map-search-input input) { color:#edf5ee; }
+:root[data-theme="dark"] :is(.provider-service-row,.provider-exception-row,.role-choice,.appointment-reschedule-form,.pet-photo-picker) { background:#29483e; border-color:#587266; color:#edf5ee; }
+:root[data-theme="dark"] .role-choice.selected { background:#355a4d; border-color:#a6d8b8; box-shadow:0 0 0 3px #466e5d; }
+:root[data-theme="dark"] :is(.role-choice p,.provider-resource-footnote,.provider-window-row span,.provider-exception-heading label,.provider-closed-toggle,.appointment-reschedule-form label) { color:#c0d0c4; }
+:root[data-theme="dark"] :is(.notice-box,.notice,.pet-contact-consent,.appointment-consent) { background:#304b3e; color:#e3eee4; }
+:root[data-theme="dark"] :is(.care-tile,.welcome) { background:#29483e; }
+:root[data-theme="dark"] .public-hero::before,
+:root[data-theme="dark"] .welcome::after { background:#29483e; }
+:root[data-theme="dark"] :is(.care-tile h3,.welcome h1,.welcome p) { color:#edf5ee; }
+:root[data-theme="dark"] :is(.care-tile p,.stat-top,.stat-note) { color:#c0d0c4; }
+:root[data-theme="dark"] :is(.account-button.outline,.btn.ghost) { border-color:#83aa95; color:#d5ecdc; }
+:root[data-theme="dark"] :is(.account-mobile-nav a,.account-topbar span,.crumb,.role-select) { color:#c0d0c4; }
+:root[data-theme="dark"] .account-mobile-nav a.active { background:#355a4d; color:#fff; }
+:root[data-theme="dark"] :is(.icon-button,.map-location-result) { background:#29483e; border-color:#587266; color:#edf5ee; }
+:root[data-theme="dark"] .public-pet-lost { background:#623c2d; border-color:#a6694a; color:#fff1df; }

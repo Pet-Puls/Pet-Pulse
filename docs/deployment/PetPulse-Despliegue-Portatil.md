@@ -19,6 +19,14 @@ Vercel y Render no almacenan copias separadas de los datos. Render lee y escribe
 - Las cuentas reales, los perfiles de mascotas, los perfiles de proveedores y la revisión administrativa viven en PostgreSQL y usan los permisos del servidor.
 - El primer administrador se define mediante una lista de correos verificados en `PETPULSE_ADMIN_EMAILS`; nunca se asigna desde el navegador.
 
+## Aplicación instalable y tema
+
+La web incluye un manifiesto PWA y puede instalarse desde un navegador compatible, sin tienda ni APK. En Android se utiliza el botón de instalación cuando el navegador lo ofrece o su menú; en iPhone se usa **Compartir → Agregar a pantalla de inicio**. La disponibilidad y apariencia dependen del navegador y sistema operativo.
+
+El selector de la parte superior cambia entre tema claro y oscuro, conserva la preferencia en el navegador y actualiza el color sugerido para la barra del navegador compatible. La preferencia es local a cada navegador y dispositivo.
+
+La aplicación necesita internet para sus operaciones. El service worker guarda únicamente una página estática de aviso sin conexión; no almacena respuestas de la API, sesiones, fotos ni páginas de usuario para uso offline. El aviso requiere que la aplicación se haya abierto con conexión al menos una vez y el service worker se haya instalado. El navegador puede eliminar su caché. El despliegue requiere HTTPS (o localhost para pruebas).
+
 ## Archivos de recreación
 
 - `render.yaml`: crea el servicio API en Render y solicita las variables que deben configurarse en cada proyecto.
@@ -167,6 +175,22 @@ Las guías oficiales distinguen restauración de base y migración de objetos. A
 
 **Ensayo limitado de Storage (14 de noviembre de 2026):** con autorización se creó en `petpulse-staging` el bucket separado `pet-photos-recovery-qa-20261114`, privado y con límite de 5 MB y tipos JPEG, PNG y WebP. Se subió un PNG ficticio de un píxel, se descargó desde el panel y se volvió a subir al mismo bucket con otro nombre; el archivo recuperado se descargó de nuevo y sus bytes coincidieron con el original mediante SHA-256. Una solicitud anónima a su URL pública fue rechazada. Se conservaron el bucket y los archivos de prueba. No se copiaron fotos existentes ni se verificaron rutas originales, integración con la aplicación, otro proyecto o recuperación integral; esta prueba no sustituye un respaldo externo coordinado ni una restauración completa.
 
+### Preparación específica para recuperar identidades Clerk
+
+**Pendiente de decisión y ensayo:** una restauración de PostgreSQL no restaura cuentas Clerk. Distinguir la recuperación de la base con la instancia original disponible de una pérdida o sustitución de esa instancia. En el primer caso, comprobar que el ID de Clerk sigue correspondiendo al perfil correcto. En el segundo, consultar con Clerk las opciones efectivamente disponibles para la instancia y plan contratado; no asumir que se pueden recuperar identificadores, sesiones, métodos de acceso o configuración.
+
+La API busca `petpulse_user_profiles.clerk_user_id` y `/api/me` crea un perfil nuevo cuando no encuentra ese ID. Por tanto, si una identidad vuelve con otro ID, iniciar sesión antes de reconciliar puede crear un perfil adicional y no recuperar las mascotas o citas anteriores. Antes de habilitar tráfico, preparar una correspondencia uno a uno revisada entre el ID antiguo, el nuevo y el perfil interno; detenerse ante duplicados, ausencias o identidad no verificada. No enlazar solo por correo ni modificar perfiles sin autorización, respaldo y un procedimiento ensayado.
+
+Para un ensayo posterior, usar una instancia y una base **de pruebas aisladas**, cuentas y datos ficticios y avisos desactivados. Verificar inicio de sesión, propiedad de datos y denegación entre cuentas, configuración de roles y administración, y cómo se tratan contraseñas, proveedores externos y sesiones. Revisar también solicitudes de eliminación o revocaciones posteriores al respaldo para no reactivar cuentas o permisos indebidamente. Registrar resultados y limitaciones antes de diseñar una recuperación real.
+
+**Simulación local (14 de noviembre de 2026):** pruebas de la API con Clerk y base de datos simulados comprobaron que el mismo ID reutiliza el perfil y que un ID nuevo con el mismo correo crea otro perfil, sin acceder a las mascotas del anterior. No se conectaron cuentas reales, no se ensayó la recuperación de Clerk ni se probó una reconciliación de identidades.
+
+**Ensayo aislado con Clerk real (14 de noviembre de 2026):** se creó la aplicación separada `PetPulse QA Recuperacion` en el espacio Hobby, con una instancia de desarrollo y dos usuarios ficticios con direcciones `+clerk_test@example.com`. Se confirmó el modo de prueba; según [Clerk](https://clerk.com/docs/guides/development/testing/test-emails-and-phones), esas direcciones no reciben mensajes en ese modo. La web y API locales se conectaron a esta instancia y a la base aislada `petpulse_clerk_qa`, sin Storage ni avisos configurados. La API rechazó una petición anónima con 401. Una cuenta inició sesión, completó su perfil y creó una mascota ficticia; tras cerrar sesión y volver a entrar, aparecieron el mismo perfil y mascota, sin duplicados. La segunda cuenta, con otro ID y otro correo, completó su perfil: su listado de mascotas respondió 200 con cero elementos y un intento de modificar la mascota ajena respondió 404. La mascota original permaneció intacta.
+
+Se respaldaron `public` y `drizzle` de esa base ficticia y se restauraron en otra base local nueva. En origen y destino se comprobaron dos perfiles con IDs Clerk distintos, una mascota vinculada al perfil original y siete migraciones con el mismo resumen de hashes y fechas. La aplicación no se conectó a la copia restaurada, por lo que este ensayo no demuestra inicio de sesión sobre ella. Tampoco prueba recuperación o reconciliación de otra instancia Clerk, correos coincidentes reales, sesiones, fotos o recuperación integral. Se conservaron las dos bases, el respaldo y las cuentas ficticias; no usar sus correos verificados como prueba de propiedad.
+
+La creación de usuarios mediante la API de Clerk verifica automáticamente correos y teléfonos por defecto; no considerar una importación como prueba de control del correo. En PetPulse, un correo principal verificado que coincida con `PETPULSE_ADMIN_EMAILS` puede obtener acceso administrador: restringir esa configuración y probar la recuperación con privilegios mínimos. Una exportación puede contener hashes y datos personales, por lo que su creación, custodia, acceso y eliminación requieren aprobación y controles específicos; no compartir ni versionar el archivo.
+
 ## Solicitudes manuales de datos y cuenta
 
 Para el lanzamiento inicial se eligió una gestión manual supervisada de exportación y eliminación. **Todavía no está lista para producción:** antes deben aprobarse la política de privacidad, la jurisdicción, las obligaciones de conservación, los plazos, el canal de solicitud, los responsables y un procedimiento ensayado en staging. No hay autoservicio implementado y esta guía no autoriza eliminar datos.
@@ -207,5 +231,6 @@ El manifiesto Render usa el plan gratuito para evitar crear recursos pagos por s
 - [Supabase: descarga de objetos](https://supabase.com/docs/guides/storage/management/download-objects)
 - [Supabase: esquema de Storage](https://supabase.com/docs/guides/storage/schema/design)
 - [Clerk: migración y exportación de usuarios](https://clerk.com/docs/guides/development/migrating/overview)
+- [Clerk: creación de usuarios y estado de verificación](https://clerk.com/docs/reference/backend/user/create-user)
 - [Clerk: solicitudes autenticadas entre orígenes](https://clerk.com/docs/guides/development/making-requests)
 - [Clerk Express: `clerkMiddleware`](https://clerk.com/docs/expressjs/reference/clerk-middleware)

@@ -39,6 +39,18 @@ vi.mock("drizzle-orm", () => ({
 
 vi.mock("@workspace/db", () => ({
   db: {
+    insert: () => ({
+      values: (profile: { clerkUserId: string; email: string; emailVerified: boolean; displayName: string; role: string; onboardingCompleted: boolean }) => ({
+        onConflictDoNothing: async () => {
+          if (!mocks.profiles.has(profile.clerkUserId)) {
+            mocks.profiles.set(profile.clerkUserId, {
+              id: `${profile.clerkUserId}-profile`,
+              ...profile,
+            });
+          }
+        },
+      }),
+    }),
     select: () => ({
       from: (table: unknown) => ({
         where: (condition: { column: { name: string }; value: string }) => {
@@ -76,7 +88,7 @@ vi.mock("../src/lib/petPhotoStorage", () => ({
 }));
 
 import express from "express";
-import { requireAuth, requireRole } from "../src/middlewares/auth";
+import { createOrSyncProfile, loadClerkIdentity, requireAuth, requireRole } from "../src/middlewares/auth";
 import petsRouter from "../src/routes/pets";
 
 const app = express();
@@ -161,6 +173,59 @@ describe("API authorization middleware", () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
       error: "Completa la configuración de tu cuenta.",
+    });
+  });
+
+  describe("identity recovery with a simulated Clerk user", () => {
+    const email = "owner@example.test";
+
+    function addClerkUser(userId: string) {
+      mocks.clerkUsers.set(userId, {
+        firstName: "QA",
+        primaryEmailAddress: { emailAddress: email, verification: { status: "verified" } },
+      });
+    }
+
+    it("reuses the existing profile when the Clerk ID is unchanged", async () => {
+      const existing = addProfile("original-id", "owner");
+      Object.assign(existing, { email, emailVerified: true });
+      addClerkUser("original-id");
+      const identity = await loadClerkIdentity("original-id");
+      if (!identity) throw new Error("Missing simulated identity.");
+
+      const profile = await createOrSyncProfile(identity);
+
+      expect(profile.id).toBe(existing.id);
+      expect(mocks.profiles.size).toBe(1);
+    });
+
+    it("does not link a new Clerk ID to an existing profile merely by email", async () => {
+      const existing = addProfile("original-id", "owner");
+      Object.assign(existing, { email, emailVerified: true });
+      mocks.pets.push({ id: "original-pet", ownerId: existing.id });
+      addClerkUser("replacement-id");
+      const identity = await loadClerkIdentity("replacement-id");
+      if (!identity) throw new Error("Missing simulated identity.");
+
+      const profile = await createOrSyncProfile(identity);
+
+      expect(profile.id).not.toBe(existing.id);
+      expect(profile.onboardingCompleted).toBe(false);
+      expect(mocks.profiles.get("original-id")).toBe(existing);
+      expect(mocks.profiles.size).toBe(2);
+      const response = await fetch(`${baseUrl}/api/pets`, {
+        headers: { "x-test-clerk-user": "replacement-id" },
+      });
+      expect(response.status).toBe(403);
+
+      const newProfile = mocks.profiles.get("replacement-id");
+      if (!newProfile) throw new Error("Missing simulated replacement profile.");
+      newProfile.onboardingCompleted = true;
+      const afterOnboarding = await fetch(`${baseUrl}/api/pets`, {
+        headers: { "x-test-clerk-user": "replacement-id" },
+      });
+      expect(afterOnboarding.status).toBe(200);
+      expect(await afterOnboarding.json()).toEqual([]);
     });
   });
 

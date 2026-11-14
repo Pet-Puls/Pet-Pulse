@@ -10,6 +10,7 @@ import {
   queryClient, stripBase,
 } from '@/app/config';
 import { LoadingPanel, PrivateRoute } from '@/components/app-shared';
+import { AppPreferences } from '@/components/AppPreferences';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import PublicHomePage from '@/pages/PublicHomePage';
 import NotFound from '@/pages/not-found';
@@ -92,7 +93,7 @@ function RouterContent() {
 }
 
 function App() {
-  return <WouterRouter base={basePath}><RouterContent/></WouterRouter>;
+  return <><AppPreferences/><WouterRouter base={basePath}><RouterContent/></WouterRouter></>;
 }
 
 export default App;
