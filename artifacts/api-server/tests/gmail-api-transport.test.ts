@@ -72,9 +72,21 @@ describe("Gmail API test transport", () => {
 
   it("reports authorization and API errors without exposing credentials", async () => {
     const mailer = createGmailApiTransport();
+    mocks.getAccessToken.mockRejectedValueOnce({
+      response: { status: 400, data: { error: "invalid_grant", error_description: "refresh-token client-secret" } },
+    });
+    await expect(mailer.transport.sendMail({ from: "sender@example.com", to: "qa@example.com", subject: "QA", text: "QA" }))
+      .rejects.toThrow("Gmail API authorization failed: invalid_grant.");
+
+    mocks.getAccessToken.mockRejectedValueOnce({
+      response: { status: 401, data: { error: "client-secret" } },
+    });
+    await expect(mailer.transport.sendMail({ from: "sender@example.com", to: "qa@example.com", subject: "QA", text: "QA" }))
+      .rejects.toThrow("Gmail API authorization failed: HTTP 401.");
+
     mocks.getAccessToken.mockRejectedValueOnce(new Error("refresh-token client-secret"));
     await expect(mailer.transport.sendMail({ from: "sender@example.com", to: "qa@example.com", subject: "QA", text: "QA" }))
-      .rejects.toThrow("Gmail API authorization failed");
+      .rejects.toThrow("Gmail API authorization failed; check the OAuth configuration or network connectivity.");
 
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 429 }));
     await expect(mailer.transport.sendMail({ from: "sender@example.com", to: "qa@example.com", subject: "QA", text: "QA" }))

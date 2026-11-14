@@ -16,6 +16,39 @@ function requiredEnv(name: string): string {
   return value;
 }
 
+function oauthFailure(error: unknown): string {
+  const prefix = "Gmail API authorization failed";
+  if (typeof error !== "object" || error === null) {
+    return `${prefix}; check the OAuth configuration.`;
+  }
+
+  const response = "response" in error ? error.response : undefined;
+  const data = typeof response === "object" && response !== null && "data" in response
+    ? response.data
+    : undefined;
+  const code = typeof data === "object" && data !== null && "error" in data
+    ? data.error
+    : undefined;
+  if (
+    code === "invalid_client" ||
+    code === "invalid_grant" ||
+    code === "invalid_request" ||
+    code === "invalid_scope" ||
+    code === "unauthorized_client" ||
+    code === "access_denied"
+  ) {
+    return `${prefix}: ${code}.`;
+  }
+
+  const status = typeof response === "object" && response !== null && "status" in response
+    ? response.status
+    : undefined;
+  if (typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599) {
+    return `${prefix}: HTTP ${status}.`;
+  }
+  return `${prefix}; check the OAuth configuration or network connectivity.`;
+}
+
 export function createGmailApiTransport() {
   const username = requiredEnv("GMAIL_API_SENDER");
   const clientId = requiredEnv("GMAIL_API_CLIENT_ID");
@@ -50,8 +83,8 @@ export function createGmailApiTransport() {
         let token: string | null | undefined;
         try {
           token = (await oauth.getAccessToken()).token;
-        } catch {
-          throw new Error("Gmail API authorization failed; check the OAuth configuration.");
+        } catch (error) {
+          throw new Error(oauthFailure(error));
         }
         if (!token) {
           throw new Error("Gmail API authorization did not return an access token.");

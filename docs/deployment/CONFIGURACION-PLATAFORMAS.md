@@ -163,6 +163,8 @@ fallos de red también pueden producir duplicados si el resultado fue incierto.
 Guardar el secreto y el token directamente en la configuración privada del
 servicio, nunca en el repositorio, el chat, una URL ni la consola del navegador.
 No cambiar la cola, activar envíos o configurar facturación sin autorización.
+Los fallos de autorización registran únicamente códigos OAuth conocidos o el
+estado HTTP, sin incluir respuestas completas ni credenciales.
 
 Ya están fijadas en el manifiesto: `NODE_ENV=production`, `NODE_VERSION=22`,
 `CLERK_AUTH_MODE=external`, `DATABASE_SSL=true` y `DATABASE_POOL_MAX=5`.
