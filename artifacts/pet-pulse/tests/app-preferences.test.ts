@@ -1,5 +1,7 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyTheme, initialTheme } from '../src/components/AppPreferences';
+import { AppPreferences, applyTheme, initialTheme } from '../src/components/AppPreferences';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -21,5 +23,14 @@ describe('theme preference', () => {
   it('defaults to light for an unknown stored value', () => {
     vi.stubGlobal('localStorage', { getItem: vi.fn().mockReturnValue('unknown') });
     expect(initialTheme()).toBe('light');
+  });
+
+  it('provides a support email for account and data requests', () => {
+    vi.stubGlobal('localStorage', { getItem: vi.fn().mockReturnValue(null) });
+    vi.stubGlobal('window', { matchMedia: () => ({ matches: true }) });
+
+    const markup = renderToStaticMarkup(createElement(AppPreferences));
+    expect(markup).toContain('href="mailto:stevennt4@gmail.com"');
+    expect(markup).toContain('solicitudes sobre tus datos y tu cuenta de PetPulse');
   });
 });

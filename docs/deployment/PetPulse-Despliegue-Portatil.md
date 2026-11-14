@@ -25,6 +25,8 @@ La web incluye un manifiesto PWA y puede instalarse desde un navegador compatibl
 
 El selector de la parte superior cambia entre tema claro y oscuro, conserva la preferencia en el navegador y actualiza el color sugerido para la barra del navegador compatible. La preferencia es local a cada navegador y dispositivo.
 
+La barra superior incluye un enlace al correo de soporte para consultas y solicitudes sobre la cuenta y sus datos; la gestión se realiza manualmente.
+
 Una sesión activa vuelve al espacio de la cuenta al abrir las rutas de acceso o registro; el botón **Salir** cierra la sesión para usar otra cuenta. Retroceder no cierra sesión, aunque el navegador puede salir de la aplicación y Clerk puede pedir acceso de nuevo si la sesión vence o se revoca. El registro lo gestiona Clerk y, después, PetPulse solicita nombre y rol en la configuración inicial; los métodos y la verificación disponibles dependen de la configuración de esa instancia.
 
 Los formularios integrados de Clerk usan la localización oficial en español con títulos de PetPulse. El portal alojado por Clerk y las etiquetas propias de desarrollo pueden mostrarse en otro idioma.

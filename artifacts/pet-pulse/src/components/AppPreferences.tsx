@@ -64,6 +64,7 @@ export function AppPreferences() {
   };
 
   return <div className="app-preferences" aria-label="Preferencias de la aplicación">
+    <details><summary>Soporte</summary><p>Para consultas o solicitudes sobre tus datos y tu cuenta de PetPulse, escribe a <a href="mailto:stevennt4@gmail.com">stevennt4@gmail.com</a>. No envíes contraseñas ni códigos de acceso.</p></details>
     <button type="button" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
       Tema: {theme === 'light' ? 'claro' : 'oscuro'}
     </button>
