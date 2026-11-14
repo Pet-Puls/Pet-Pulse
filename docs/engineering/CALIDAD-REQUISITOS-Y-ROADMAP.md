@@ -269,8 +269,15 @@ No usar salud, ubicación precisa, contactos o datos identificables para analít
 2. Fortalecer las pruebas automatizadas API y E2E de las funciones del lanzamiento inicial y revisar CI en Windows y Linux.
 3. Definir políticas de privacidad, eliminación/exportación y retención; ensayar migraciones y restauración en entornos aislados.
 4. Mantener Gmail pausado hasta evaluar una alternativa compatible y revisar la cola. Los avisos automáticos de WhatsApp están fuera del alcance; la configuración de secretos y los envíos de prueba requieren autorización.
+
 5. Publicar en staging únicamente los cambios aprobados y verificar los flujos desplegados. El bucket privado ya se confirmó en staging.
 6. Dejar historial de salud y analítica administrativa para una etapa posterior al lanzamiento inicial.
 7. Promover a producción únicamente tras aprobación, migraciones ensayadas, secretos separados, monitoreo y recuperación comprobados.
+
+**Preparación local de correo:** existe un transporte experimental por Gmail
+API sobre HTTPS, seleccionado explícitamente y limitado a un perfil, una cita
+y una fecha de prueba. No se ha habilitado ni probado con Google en staging; la cola
+existente debe revisarse antes de cualquier envío. Los detalles y restricciones
+están en [CONFIGURACION-PLATAFORMAS.md](../deployment/CONFIGURACION-PLATAFORMAS.md).
 
 La documentación no crea issues en GitHub ni aplica migraciones. Esas acciones requieren acceso al repositorio y confirmación del entorno destino.

@@ -108,18 +108,58 @@ Crear un **Blueprint** desde el repositorio de GitHub. Render leerá
 | `SUPABASE_URL` | URL del proyecto Supabase del mismo entorno | No |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave `service_role` del mismo proyecto | Sí |
 | `SUPABASE_PET_PHOTOS_BUCKET` | `pet-photos` | No |
-| `GMAIL_SMTP_USER` | Cuenta Gmail que enviará los avisos | Sí |
-| `GMAIL_SMTP_APP_PASSWORD` | Contraseña de aplicación de esa cuenta Gmail | Sí |
+| `GMAIL_SMTP_USER` | Cuenta Gmail para el transporte SMTP anterior | Sí |
+| `GMAIL_SMTP_APP_PASSWORD` | Contraseña de aplicación para SMTP | Sí |
 | `GMAIL_FROM_NAME` | Nombre visible, por ejemplo `Monka` | No |
 
-El envío de email usa Gmail SMTP solo cuando ambas variables secretas están
-configuradas; sin ellas, los avisos quedan en la outbox. Render Free bloquea
-SMTP, por lo que hay que evaluar otra alternativa compatible antes de habilitar
-el correo. Los avisos automáticos de WhatsApp se retiraron del alcance: no se
-crean nuevos avisos y los diferidos anteriores se conservan sin envío. Los
-enlaces de contacto de WhatsApp de proveedores siguen disponibles. No activar
-ningún envío sin revisar primero la cola existente. No colocar contraseñas de
-aplicación en el repositorio ni en el navegador.
+Sin configuración de correo, los avisos quedan en la outbox. El transporte SMTP
+existente se conserva, pero **Render Free bloquea sus puertos**, de modo que no
+sirve allí. Los avisos automáticos de WhatsApp están fuera del alcance: no se
+crean nuevos y los diferidos anteriores se conservan sin envío. Los enlaces de
+contacto de WhatsApp de proveedores siguen disponibles.
+
+### Ensayo limitado de Gmail API
+
+El transporte `gmail-api` usa HTTPS y OAuth, pero permanece inactivo mientras
+no se seleccione explícitamente. Solo está preparado para un ensayo limitado,
+no para habilitar correo general. Antes de configurarlo, revisar la cola y
+obtener autorización para enviar a una cuenta de prueba. La selección de SMTP
+por defecto mantiene el comportamiento anterior: si sus dos credenciales ya
+están configuradas, el worker SMTP puede procesar la cola.
+
+Para el ensayo se necesitan estas variables en el servicio de **staging**:
+
+| Variable | Uso |
+| --- | --- |
+| `APPOINTMENT_EMAIL_TRANSPORT` | `gmail-api` para seleccionar este transporte |
+| `GMAIL_API_SENDER` | Dirección Gmail que autorizó el envío |
+| `GMAIL_API_CLIENT_ID` | ID del cliente OAuth de Google |
+| `GMAIL_API_CLIENT_SECRET` | Secreto del cliente OAuth |
+| `GMAIL_API_REFRESH_TOKEN` | Token de renovación de la cuenta remitente |
+| `GMAIL_API_TEST_RECIPIENT_PROFILE_ID` | UUID del perfil PetPulse destinatario de la prueba |
+| `GMAIL_API_TEST_APPOINTMENT_ID` | UUID de la cita ficticia seleccionada |
+| `GMAIL_API_TEST_NOT_BEFORE` | Fecha UTC exacta, p. ej. `2026-11-14T20:00:00.000Z` |
+
+El worker de Gmail API solo recupera y procesa notificaciones para ese perfil
+de esa cita creadas desde la fecha indicada; no modifica ni envía las demás.
+Elegir la fecha antes de crear la cita ficticia y, tras crearla con el envío
+desactivado, identificar su UUID. El destinatario debe tener correo verificado
+en PetPulse. El límite puede incluir varios avisos de la cita para ese perfil,
+no solo uno. La cola puede procesarse inmediatamente cuando arranca el
+servicio; no activar el transporte hasta acordar el ensayo.
+
+La cuenta remitente debe autorizar el permiso sensible
+[`gmail.send`](https://developers.google.com/workspace/gmail/api/auth/scopes);
+no se necesitan permisos para leer el buzón. En proyectos OAuth externos en
+modo Testing, el token de renovación vence a los siete días; también puede ser
+revocado antes. Para una demostración pública hay que revisar las condiciones
+y verificación de Google. Render Free puede suspender el proceso al estar
+inactivo, por lo que no se garantiza la entrega inmediata; los reintentos ante
+fallos de red también pueden producir duplicados si el resultado fue incierto.
+
+Guardar el secreto y el token directamente en la configuración privada del
+servicio, nunca en el repositorio, el chat, una URL ni la consola del navegador.
+No cambiar la cola, activar envíos o configurar facturación sin autorización.
 
 Ya están fijadas en el manifiesto: `NODE_ENV=production`, `NODE_VERSION=22`,
 `CLERK_AUTH_MODE=external`, `DATABASE_SSL=true` y `DATABASE_POOL_MAX=5`.

@@ -1,6 +1,7 @@
-import { and, eq, lte, lt, asc } from "drizzle-orm";
+import { and, eq, gte, lte, lt, asc } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { appointmentNotificationsTable, db, userProfilesTable } from "@workspace/db";
+import { createGmailApiTransport } from "./gmailApiTransport";
 import { logger } from "./logger";
 
 const pollIntervalMs = 15_000;
@@ -10,6 +11,13 @@ const retryDelaysMs = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000];
 const batchSize = 10;
 
 function createTransport() {
+  const mode = process.env.APPOINTMENT_EMAIL_TRANSPORT?.trim() || "smtp";
+  if (mode === "gmail-api") {
+    return createGmailApiTransport();
+  }
+  if (mode !== "smtp") {
+    throw new Error("APPOINTMENT_EMAIL_TRANSPORT must be smtp or gmail-api.");
+  }
   const username = process.env.GMAIL_SMTP_USER?.trim();
   const appPassword = process.env.GMAIL_SMTP_APP_PASSWORD?.replace(/\s/g, "");
   if (!username && !appPassword) {
@@ -49,6 +57,13 @@ export function startAppointmentEmailWorker(): void {
     return;
   }
 
+  const testScope = "testScope" in mailer
+    ? and(
+        eq(appointmentNotificationsTable.recipientProfileId, mailer.testScope.recipientProfileId),
+        eq(appointmentNotificationsTable.appointmentId, mailer.testScope.appointmentId),
+        gte(appointmentNotificationsTable.createdAt, mailer.testScope.notBefore),
+      )
+    : undefined;
   let running = false;
   const processBatch = async (): Promise<void> => {
     if (running) {
@@ -70,6 +85,7 @@ export function startAppointmentEmailWorker(): void {
             eq(appointmentNotificationsTable.channel, "email"),
             eq(appointmentNotificationsTable.status, "sending"),
             lt(appointmentNotificationsTable.updatedAt, staleBefore),
+            testScope,
           ),
         );
 
@@ -82,6 +98,7 @@ export function startAppointmentEmailWorker(): void {
             eq(appointmentNotificationsTable.channel, "email"),
             eq(appointmentNotificationsTable.status, "pending"),
             lte(appointmentNotificationsTable.nextAttemptAt, now),
+            testScope,
           ),
         )
         .orderBy(asc(appointmentNotificationsTable.createdAt))
@@ -99,6 +116,7 @@ export function startAppointmentEmailWorker(): void {
             and(
               eq(appointmentNotificationsTable.id, notification.id),
               eq(appointmentNotificationsTable.status, "pending"),
+              testScope,
             ),
           )
           .returning();
