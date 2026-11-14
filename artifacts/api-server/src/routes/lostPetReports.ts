@@ -24,6 +24,20 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 const router: IRouter = Router();
 const reportDurationMs = 72 * 60 * 60 * 1000;
 
+function isValidLastSeenAt(value: unknown): boolean {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/i.test(value)
+  ) {
+    return false;
+  }
+  const datePart = value.slice(0, 10);
+  const date = new Date(`${datePart}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) &&
+    date.toISOString().slice(0, 10) === datePart &&
+    Number.isFinite(new Date(value).getTime());
+}
+
 function isValidInput(
   input: { locationDescription: string; lastSeenAt: Date; consentToShareLocation: boolean },
   now: Date,
@@ -120,6 +134,10 @@ router.post(
       res.status(400).json({
         error: parsed.error.message,
       });
+      return;
+    }
+    if (!isValidLastSeenAt(req.body?.lastSeenAt)) {
+      res.status(400).json({ error: "Indica una fecha y hora válidas con zona horaria." });
       return;
     }
 
@@ -317,6 +335,10 @@ router.post(
       res.status(400).json({
         error: parsed.error.message,
       });
+      return;
+    }
+    if (!isValidLastSeenAt(req.body?.lastSeenAt)) {
+      res.status(400).json({ error: "Indica una fecha y hora válidas con zona horaria." });
       return;
     }
 

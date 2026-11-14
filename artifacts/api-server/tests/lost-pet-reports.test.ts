@@ -289,6 +289,45 @@ function reportInput(consentToShareLocation = true) {
 }
 
 describe("lost-pet report routes", () => {
+  it("rejects malformed or impossible last-seen dates when creating a report", async () => {
+    for (const lastSeenAt of [null, 0, "2024-02-30T12:00:00Z", "2024-02-29T12:00:00", "2024-02-29T25:00:00Z"]) {
+      const response = await fetch(`${baseUrl}/api/pets/${petId}/lost-reports`, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ ...reportInput(), lastSeenAt }),
+      });
+      expect(response.status, `lastSeenAt: ${lastSeenAt}`).toBe(400);
+    }
+    expect(mocks.reports).toHaveLength(0);
+
+    const valid = await fetch(`${baseUrl}/api/pets/${petId}/lost-reports`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ ...reportInput(), lastSeenAt: "2024-02-29T12:30:00-05:00" }),
+    });
+    expect(valid.status, await valid.clone().text()).toBe(201);
+  });
+
+  it("rejects malformed last-seen dates when renewing a report", async () => {
+    const created = await fetch(`${baseUrl}/api/pets/${petId}/lost-reports`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(reportInput()),
+    });
+    expect(created.status).toBe(201);
+    const report = await created.json();
+    const originalLastSeenAt = mocks.reports[0].lastSeenAt;
+    for (const lastSeenAt of [null, "2024-02-30T12:00:00Z"]) {
+      const response = await fetch(`${baseUrl}/api/lost-pet-reports/${report.id}/renew`, {
+        method: "POST",
+        headers: headers(),
+        body: JSON.stringify({ ...reportInput(), lastSeenAt }),
+      });
+      expect(response.status, `lastSeenAt: ${lastSeenAt}`).toBe(400);
+    }
+    expect(mocks.reports[0].lastSeenAt).toEqual(originalLastSeenAt);
+  });
+
   it("requires explicit consent and creates a report that expires after 72 hours", async () => {
     const withoutConsent = await fetch(`${baseUrl}/api/pets/${petId}/lost-reports`, {
       method: "POST",
