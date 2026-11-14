@@ -398,20 +398,23 @@ describe("appointment routes", () => {
     expect(deniedAction.status).toBe(403);
   });
 
-  it("only queues WhatsApp notices for a phone number with explicit consent", async () => {
+  it("does not queue WhatsApp notices even when prior consent exists", async () => {
     Object.assign(mocks.profiles[0], {
       phoneNumber: "+573001234567",
       whatsappOptIn: true,
     });
     const response = await requestAppointment("10:00");
     expect(response.status).toBe(201);
-    expect(mocks.notifications).toContainEqual(
-      expect.objectContaining({
-        channel: "whatsapp",
-        destination: "+573001234567",
-        status: "deferred",
-      }),
-    );
-    expect(mocks.notifications.filter(row => row.channel === "whatsapp")).toHaveLength(1);
+    expect(mocks.notifications.filter(row => row.channel === "whatsapp")).toHaveLength(0);
+    expect(mocks.notifications.filter(row => row.channel === "email")).toHaveLength(2);
+    const appointment = await response.json() as { id: string };
+    const confirmed = await fetch(`${baseUrl}/api/appointments/${appointment.id}/actions`, {
+      method: "POST",
+      headers: headers("provider-one"),
+      body: JSON.stringify({ action: "confirm" }),
+    });
+    expect(confirmed.status).toBe(200);
+    expect(mocks.notifications.filter(row => row.channel === "whatsapp")).toHaveLength(0);
+    expect(mocks.notifications.filter(row => row.channel === "email")).toHaveLength(3);
   });
 });

@@ -113,10 +113,13 @@ Crear un **Blueprint** desde el repositorio de GitHub. Render leerá
 | `GMAIL_FROM_NAME` | Nombre visible, por ejemplo `Monka` | No |
 
 El envío de email usa Gmail SMTP solo cuando ambas variables secretas están
-configuradas; sin ellas, los avisos quedan en la outbox. WhatsApp no se envía:
-los avisos con teléfono y consentimiento explícito permanecen diferidos hasta
-integrar un proveedor. No colocar contraseñas de aplicación en el repositorio ni
-en el navegador.
+configuradas; sin ellas, los avisos quedan en la outbox. Render Free bloquea
+SMTP, por lo que hay que evaluar otra alternativa compatible antes de habilitar
+el correo. Los avisos automáticos de WhatsApp se retiraron del alcance: no se
+crean nuevos avisos y los diferidos anteriores se conservan sin envío. Los
+enlaces de contacto de WhatsApp de proveedores siguen disponibles. No activar
+ningún envío sin revisar primero la cola existente. No colocar contraseñas de
+aplicación en el repositorio ni en el navegador.
 
 Ya están fijadas en el manifiesto: `NODE_ENV=production`, `NODE_VERSION=22`,
 `CLERK_AUTH_MODE=external`, `DATABASE_SSL=true` y `DATABASE_POOL_MAX=5`.

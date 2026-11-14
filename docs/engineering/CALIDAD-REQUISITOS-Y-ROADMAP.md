@@ -37,7 +37,7 @@ Los perfiles de proveedor aceptan sitio web, Instagram, Facebook y WhatsApp opci
 
 En los cambios locales, la API rechaza el nombre de la cuenta, el nombre y la especie de mascota y el nombre comercial y barrio del proveedor si contienen únicamente espacios; se recortan antes de guardarse. La revisión de los demás campos sigue pendiente y las pruebas con datos simulados no sustituyen la comprobación en staging.
 
-El esquema local ya incluye catálogo de servicios, disponibilidad semanal/excepciones, citas, preferencias de WhatsApp y outbox. Las migraciones `0003_provider_services_and_availability.sql`, `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` se aplicaron y verificaron en staging el 13 de noviembre de 2026; no se han aplicado en producción. WhatsApp conserva avisos diferidos sin enviarlos hasta integrar un proveedor; el correo usa Gmail SMTP cuando se configuran sus secretos.
+El esquema local ya incluye catálogo de servicios, disponibilidad semanal/excepciones, citas, preferencias de WhatsApp y outbox. Las migraciones `0003_provider_services_and_availability.sql`, `0004_gorgeous_luminals.sql` y `0005_worried_hellcat.sql` se aplicaron y verificaron en staging el 13 de noviembre de 2026; no se han aplicado en producción. Los avisos automáticos de WhatsApp se retiraron del alcance; los registros diferidos anteriores se conservan sin envío y no se crean nuevos. Los enlaces de contacto de proveedores permanecen disponibles. El correo necesita una alternativa compatible con Render Free, que bloquea SMTP.
 
 ## 3. Hallazgos de ingeniería y acciones
 
@@ -90,7 +90,7 @@ No necesita secretos, no publica artefactos y tiene permiso de solo lectura al r
 | TC-09 | Ubicación del navegador denegada, dirección manual y proveedor de lugares no disponible | La búsqueda manual funciona; no se finge GPS de mascota y se informa el fallo externo                            | P1        |
 | TC-10 | Navegación con teclado y pantalla móvil                                                 | Foco visible, etiquetas, errores comprensibles y controles utilizables                                           | P1        |
 | TC-11 | `pnpm install --frozen-lockfile` y build en Windows/Linux                               | Ambas plataformas instalan dependencias y compilan con lockfile sin cambios                                      | P0        |
-| TC-12 | Solicitud concurrente, propuesta/aceptación de cambio, cancelación y avisos de cita     | Una sola reserva por intervalo; solo participantes ejecutan transiciones permitidas; email queda trazable y WhatsApp no se envía sin integración | P0 |
+| TC-12 | Solicitud concurrente, propuesta/aceptación de cambio, cancelación y avisos de cita     | Una sola reserva por intervalo; solo participantes ejecutan transiciones permitidas; email queda trazable y no se generan avisos automáticos de WhatsApp | P0 |
 
 No ejecutar TC-07 ni otras pruebas destructivas contra producción. Usar bases de datos efímeras o staging aislado.
 
@@ -135,7 +135,7 @@ El documento maestro contiene una especificación de producto más amplia. Esta 
 | RF-09 | Solicitar y gestionar citas con prevención de dobles reservas            | Desplegado y parcialmente probado en staging; concurrencia con PostgreSQL real probada en local; faltan más escenarios integrados y avisos |
 | RF-10 | Reportar y cerrar una mascota perdida con ubicación compartida temporal  | Desplegado y probado en staging con datos ficticios; vencimiento adelantado manualmente para probar renovación y cierre, sin esperar 72 horas naturales |
 | RF-11 | Registrar historial de salud y recordatorios                             | Pendiente; no debe interpretarse como diagnóstico                     |
-| RF-12 | Gestionar notificaciones, preferencias y estado de entrega               | Email Gmail con reintentos, preferencia WhatsApp y outbox diferida implementados localmente; falta configurar Gmail y validar staging |
+| RF-12 | Gestionar notificaciones y estado de entrega                             | Correo pendiente de integración compatible con Render Free; avisos automáticos de WhatsApp fuera del alcance |
 | RF-13 | Eliminar/exportar cuenta y aplicar retención definida                    | Gestión manual supervisada elegida para el lanzamiento inicial; faltan política, responsables y ensayo en staging |
 | RF-14 | Mostrar analítica administrativa calculada de datos reales y agregados   | Pendiente; las métricas actuales de demo no son analítica operativa   |
 
@@ -217,7 +217,7 @@ Los siguientes issues son propuestas para crear en GitHub cuando haya acceso. **
 **ISSUE-14 — Integrar notificaciones y preferencias de comunicación**\
 **HU:** Como usuario, quiero enterarme de cambios importantes por canales que autoricé.\
 **RF/RNF:** RF-12; RNF-07 entrega y privacidad.\
-**Criterios:** correo al email verificado mediante Gmail SMTP con reintentos y estado persistido; número separado y consentimiento explícito para WhatsApp, con avisos diferidos y cancelables hasta integrar un proveedor. Las credenciales Gmail se configuran como secretos del entorno y nunca en el código. Implementado localmente; falta configurar/verificar el entorno de staging.
+**Criterios:** correo al email verificado con reintentos y estado persistido; evaluar una alternativa compatible con Render Free y guardar las credenciales únicamente como secretos. Los avisos automáticos de WhatsApp están fuera del alcance; los registros anteriores se conservan sin envío. Revisar la cola antes de habilitar correo.
 
 ### P3 — Operación y ciencia de datos responsable
 
@@ -262,7 +262,7 @@ No usar salud, ubicación precisa, contactos o datos identificables para analít
 1. Completar las pruebas pendientes de mascotas perdidas y los recorridos con cuentas ficticias; no tocar producción.
 2. Fortalecer las pruebas automatizadas API y E2E de las funciones del lanzamiento inicial y revisar CI en Windows y Linux.
 3. Definir políticas de privacidad, eliminación/exportación y retención; ensayar migraciones y restauración en entornos aislados.
-4. Mantener Gmail y WhatsApp pausados hasta acordar el alcance de notificaciones. La configuración de secretos y el envío de avisos de prueba requieren autorización.
+4. Mantener Gmail pausado hasta evaluar una alternativa compatible y revisar la cola. Los avisos automáticos de WhatsApp están fuera del alcance; la configuración de secretos y los envíos de prueba requieren autorización.
 5. Publicar en staging únicamente los cambios aprobados y verificar los flujos desplegados. El bucket privado ya se confirmó en staging.
 6. Dejar historial de salud y analítica administrativa para una etapa posterior al lanzamiento inicial.
 7. Promover a producción únicamente tras aprobación, migraciones ensayadas, secretos separados, monitoreo y recuperación comprobados.

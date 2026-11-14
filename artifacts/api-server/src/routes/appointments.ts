@@ -98,8 +98,6 @@ function notificationRows(
     id: string;
     email: string;
     emailVerified: boolean;
-    phoneNumber: string | null;
-    whatsappOptIn: boolean;
   }>,
   subject: string,
   message: string,
@@ -114,17 +112,6 @@ function notificationRows(
         destination: recipient.email,
         subject,
         message,
-      });
-    }
-    if (recipient.whatsappOptIn && recipient.phoneNumber) {
-      rows.push({
-        appointmentId,
-        recipientProfileId: recipient.id,
-        channel: "whatsapp" as const,
-        destination: recipient.phoneNumber,
-        subject: null,
-        message,
-        status: "deferred" as const,
       });
     }
     return rows;
@@ -151,8 +138,6 @@ async function enqueueNotifications(
       id: userProfilesTable.id,
       email: userProfilesTable.email,
       emailVerified: userProfilesTable.emailVerified,
-      phoneNumber: userProfilesTable.phoneNumber,
-      whatsappOptIn: userProfilesTable.whatsappOptIn,
     })
     .from(userProfilesTable)
     .where(inArray(userProfilesTable.id, recipientIds));

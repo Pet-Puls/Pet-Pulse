@@ -2,17 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CalendarClock, Check, Clock3, PawPrint, X } from 'lucide-react';
 import {
-  getGetNotificationPreferencesQueryKey,
   getListAppointmentsQueryKey,
   getListPetsQueryKey,
   getListPublicProvidersQueryKey,
   useActOnAppointment,
-  useGetNotificationPreferences,
   useListAppointments,
   useListPets,
   useListPublicProviders,
   useRequestAppointment,
-  useSaveNotificationPreferences,
 } from '@workspace/api-client-react';
 import type {
   Appointment,
@@ -73,19 +70,6 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
       queryKey: getListPetsQueryKey(),
     },
   });
-  const preferences = useGetNotificationPreferences({
-    query: {
-      enabled: canUseAppointments,
-      queryKey: getGetNotificationPreferencesQueryKey(),
-    },
-  });
-  const savePreferences = useSaveNotificationPreferences({
-    mutation: {
-      onSuccess: result => {
-        client.setQueryData(getGetNotificationPreferencesQueryKey(), result);
-      },
-    },
-  });
   const request = useRequestAppointment({
     mutation: {
       onSuccess: () => {
@@ -109,9 +93,6 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
   const [petId, setPetId] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
-  const [preferencesInitialized, setPreferencesInitialized] = useState(false);
   const [reschedule, setReschedule] = useState<{ id: string; date: string; time: string } | null>(null);
   const [notice, setNotice] = useState('');
 
@@ -139,13 +120,6 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
   }, [selectedProvider, serviceId, services, dateProviderId]);
 
   useEffect(() => {
-    if (!preferences.data || preferencesInitialized) return;
-    setPhoneNumber(preferences.data.phoneNumber ?? '');
-    setWhatsappOptIn(preferences.data.whatsappOptIn);
-    setPreferencesInitialized(true);
-  }, [preferences.data, preferencesInitialized]);
-
-  useEffect(() => {
     if (pets.data?.length && !pets.data.some(pet => pet.id === petId)) {
       setPetId(pets.data[0].id);
     }
@@ -162,19 +136,6 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
         setNotice('Tu solicitud quedó pendiente de confirmación. Las actualizaciones también aparecerán aquí.');
         setTime('');
       },
-    });
-  }
-
-  function saveNotificationPreferences(event: FormEvent) {
-    event.preventDefault();
-    setNotice('');
-    savePreferences.mutate({
-      data: {
-        phoneNumber: phoneNumber.trim() || null,
-        whatsappOptIn,
-      },
-    }, {
-      onSuccess: () => setNotice('Tus preferencias de notificación se guardaron.'),
     });
   }
 
@@ -209,7 +170,6 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
     {notice && <div className="notice-box" role="status" style={{ marginBottom: 16 }}><Check size={17}/>{notice}</div>}
     {request.isError && <div className="error-box" role="alert" style={{ marginBottom: 16 }}>{errorMessage(request.error)}</div>}
     {action.isError && <div className="error-box" role="alert" style={{ marginBottom: 16 }}>{errorMessage(action.error)}</div>}
-    {savePreferences.isError && <div className="error-box" role="alert" style={{ marginBottom: 16 }}>{errorMessage(savePreferences.error)}</div>}
 
     <div className="appointment-page-grid">
       {me.role === 'owner' && <section className="account-panel">
@@ -320,29 +280,8 @@ export default function AppointmentsPage({ me }: { me: MeProfile }) {
 
       <section className="account-panel appointment-preferences">
         <div className="account-kicker">Avisos de agenda</div>
-        <h2 className="display appointment-section-title">Preferencias de notificación</h2>
-        {preferences.isLoading
-          ? <LoadingPanel label="Cargando preferencias…"/>
-          : preferences.isError
-            ? <ErrorPanel message={errorMessage(preferences.error)} retry={() => void preferences.refetch()}/>
-            : <form className="account-form" onSubmit={saveNotificationPreferences}>
-              <p className="account-form-hint full">Los avisos de cita se envían al correo verificado de tu cuenta cuando Gmail SMTP esté configurado.</p>
-              <div className="account-field full">
-                <label htmlFor="notification-phone">Teléfono para WhatsApp (opcional)</label>
-                <input id="notification-phone" type="tel" inputMode="tel" maxLength={16} pattern="\+[1-9][0-9]{1,14}" placeholder="+573001234567" value={phoneNumber} onChange={event => setPhoneNumber(event.target.value)}/>
-                <small>Usa el formato internacional, incluido el signo +.</small>
-              </div>
-              <label className="appointment-consent full">
-                <input type="checkbox" checked={whatsappOptIn} onChange={event => setWhatsappOptIn(event.target.checked)}/>
-                <span>Acepto recibir avisos de citas por WhatsApp en el número indicado.</span>
-              </label>
-              <p className="account-form-hint full">WhatsApp aún no está conectado a un proveedor de envío; con tu permiso, los avisos quedarán en espera y no se enviarán todavía.</p>
-              <div className="account-form-actions">
-                <button className="account-button" disabled={savePreferences.isPending}>
-                  {savePreferences.isPending ? 'Guardando…' : 'Guardar preferencias'} <Check size={15}/>
-                </button>
-              </div>
-            </form>}
+        <h2 className="display appointment-section-title">Actualizaciones de tus citas</h2>
+        <p className="account-form-hint">Los avisos por correo requieren configuración y pueden no estar disponibles. Consulta las actualizaciones en tu agenda.</p>
       </section>
     </div>
   </main>;
