@@ -2,6 +2,8 @@ import {
   index,
   pgEnum,
   pgTable,
+  uniqueIndex,
+  boolean,
   text,
   timestamp,
   uuid,
@@ -26,6 +28,9 @@ export const petsTable = pgTable(
     breed: text("breed"),
     age: text("age"),
     emergencyContact: text("emergency_contact"),
+    photoPath: text("photo_path"),
+    qrToken: text("qr_token"),
+    shareEmergencyContact: boolean("share_emergency_contact").notNull().default(false),
     status: petStatusEnum("status").notNull().default("home"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -33,7 +38,10 @@ export const petsTable = pgTable(
       .defaultNow()
       .$onUpdate(() => new Date()),
   },
-  (table) => [index("petpulse_pets_owner_id_idx").on(table.ownerId)],
+  (table) => [
+    index("petpulse_pets_owner_id_idx").on(table.ownerId),
+    uniqueIndex("petpulse_pets_qr_token_idx").on(table.qrToken),
+  ],
 );
 
 export type PetRecord = typeof petsTable.$inferSelect;

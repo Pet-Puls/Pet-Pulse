@@ -34,6 +34,10 @@ export const providerProfilesTable = pgTable(
     category: providerCategoryEnum("category").notNull(),
     neighborhood: text("neighborhood").notNull(),
     description: text("description"),
+    websiteUrl: text("website_url"),
+    instagramUrl: text("instagram_url"),
+    facebookUrl: text("facebook_url"),
+    whatsappUrl: text("whatsapp_url"),
     approvalStatus: providerApprovalStatusEnum("approval_status")
       .notNull()
       .default("pending"),

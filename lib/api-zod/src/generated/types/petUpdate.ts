@@ -33,5 +33,6 @@ export interface PetUpdate {
      * @nullable
      */
   emergencyContact?: string | null;
+  shareEmergencyContact?: boolean;
   status?: PetUpdateStatus;
 }
