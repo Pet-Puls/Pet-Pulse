@@ -7,7 +7,7 @@ import NotFound from '@/pages/not-found';
 import { Route, Switch, useLocation, Router as WouterRouter, Link } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import {
-  Activity, AlertTriangle, ArrowRight, CalendarDays, Check, ChevronRight,
+  Activity, AlertTriangle, ArrowLeft, ArrowRight, CalendarDays, Check, ChevronRight,
   CircleHelp, Clock3, Dog, Heart, Home, MapPin, Menu, Navigation, PawPrint,
   Plus, QrCode, Search, ShieldCheck, Store, Stethoscope, UserRound, Users,
   Waves, X, Star, Footprints, ScanLine, Bone, Building2, Bell, LocateFixed,
@@ -75,7 +75,7 @@ function AppState({ children }: { children: (state: State) => ReactNode }) {
 }
 type State = { role: Role; setRole: (r: Role) => void; pets: Pet[]; setPets: (p: Pet[] | ((prev: Pet[]) => Pet[])) => void; providers: Provider[]; setProviders: (p: Provider[] | ((prev: Provider[]) => Provider[])) => void; appointments: Appointment[]; setAppointments: (a: Appointment[] | ((prev: Appointment[]) => Appointment[])) => void; alerts: LostAlert[]; setAlerts: (a: LostAlert[] | ((prev: LostAlert[]) => LostAlert[])) => void; notify: (s: string) => void };
 
-function Shell({ children, state }: { children: ReactNode; state: State }) {
+function Shell({ children, state, standalone }: { children: ReactNode; state: State; standalone: boolean }) {
   const [path] = useLocation();
   const activeAlerts = state.alerts.filter(a => a.status === 'active');
   const menuItems = state.role === 'provider'
@@ -92,7 +92,10 @@ function Shell({ children, state }: { children: ReactNode; state: State }) {
       <div className="side-bottom"><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 9 }}><CircleHelp size={15}/> Un lugar más seguro para ellos.</div><div>Prototipo interactivo · datos simulados</div></div>
     </aside>
     <div className="main-area">
-      <div className="demo-banner"><CircleHelp size={15}/> Demostración interactiva · datos locales de prueba, aislados de las cuentas PetPulse</div>
+      <div className="demo-banner">
+        <span className="demo-banner-message"><CircleHelp size={15}/> Demostración interactiva · datos locales de prueba, aislados de las cuentas PetPulse</span>
+        {!standalone && <a className="demo-exit" href={import.meta.env.BASE_URL}><ArrowLeft size={15}/> Salir de la demostración</a>}
+      </div>
       <header className="topbar">
         <div className="crumb">Medellín <span style={{ margin: '0 8px', color: '#b7bcb1' }}>/</span><strong style={{ color: '#315c52' }}>{pageTitle[path] || 'PetPulse'}</strong></div>
         <div className="top-right">
@@ -232,9 +235,9 @@ function AdminPage({ state }: { state: State }) {
     <div className="grid grid-2" style={{ marginTop: 18 }}><section className="panel"><div className="eyebrow">Actividad de la red</div><h2 className="display">Pulso de PetPulse</h2><div className="appointment"><div className="stat-icon"><Building2 size={16}/></div><div className="appointment-main"><strong>Proveedores en el directorio</strong><p>Clínicas, paseos, refugios y más</p></div><strong>{state.providers.length}</strong></div><div className="appointment"><div className="stat-icon"><CalendarDays size={16}/></div><div className="appointment-main"><strong>Solicitudes de cita</strong><p>Guardadas de forma local</p></div><strong>{state.appointments.length}</strong></div><div className="appointment"><div className="stat-icon"><Bell size={16}/></div><div className="appointment-main"><strong>Alertas resueltas</strong><p>Seguimiento de la red</p></div><strong>{state.alerts.filter(a => a.status === 'resolved').length}</strong></div></section><section className="panel" style={{ background: '#e9f0e5' }}><div className="eyebrow">Transparencia</div><h2 className="display">Un prototipo, con límites claros.</h2><p className="subtle">Los perfiles, ubicaciones, movimientos y alertas son simulados. No hay GPS real, backend ni notificaciones externas. Los cambios se guardan solo en este navegador.</p><div className="notice"><ShieldCheck size={16}/> La información de emergencia solo se muestra en la ficha QR de demostración.</div></section></div>
   </main>;
 }
-function Router() {
+function Router({ standalone }: { standalone: boolean }) {
   const [location] = useLocation();
-  return <AppState>{state => <Shell state={state}><ErrorBoundary resetKey={location}><Switch>
+  return <AppState>{state => <Shell state={state} standalone={standalone}><ErrorBoundary resetKey={location}><Switch>
     <Route path="/"><HomePage state={state}/></Route>
     <Route path="/map"><MapPage state={state}/></Route>
     <Route path="/pets"><PetPage state={state}/></Route>
@@ -246,7 +249,7 @@ function Router() {
 }
 export function DemoApp({ standalone = false }: { standalone?: boolean }) {
   const router = standalone
-    ? <WouterRouter hook={useHashLocation}><Router/></WouterRouter>
-    : <WouterRouter base={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo`}><Router/></WouterRouter>;
+    ? <WouterRouter hook={useHashLocation}><Router standalone/></WouterRouter>
+    : <WouterRouter base={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo`}><Router standalone={false}/></WouterRouter>;
   return <QueryClientProvider client={client}><TooltipProvider>{router}<Toaster/></TooltipProvider></QueryClientProvider>;
 }
