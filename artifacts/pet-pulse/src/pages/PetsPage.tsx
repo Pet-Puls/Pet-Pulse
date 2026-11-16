@@ -7,8 +7,9 @@ import {
 import {
   createPetQr, getListPetsQueryKey, revokePetQr, uploadPetPhoto,
   useCreatePet, useDeletePet, useListPets, useUpdatePet,
+  formatPetAge, isPetSpecies, parsePetAge, petSpeciesOptions,
 } from '@workspace/api-client-react';
-import type { PetInput, PetProfile, PetUpdate } from '@workspace/api-client-react';
+import type { PetAgeUnit, PetInput, PetProfile, PetUpdate } from '@workspace/api-client-react';
 import { basePath } from '@/app/config';
 import { ErrorPanel, LoadingPanel, PageHeading, errorMessage } from '@/components/app-shared';
 import { PetSummary } from './WorkspaceHomePage';
@@ -16,7 +17,7 @@ import { PetSummary } from './WorkspaceHomePage';
 const acceptedPhotoTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxPhotoBytes = 5 * 1024 * 1024;
 
-function PetEditor({
+export function PetEditor({
   pet,
   onClose,
   onSaved,
@@ -30,7 +31,10 @@ function PetEditor({
   const [name, setName] = useState(pet?.name || '');
   const [species, setSpecies] = useState(pet?.species || '');
   const [breed, setBreed] = useState(pet?.breed || '');
-  const [age, setAge] = useState(pet?.age || '');
+  const parsedAge = pet?.age ? parsePetAge(pet.age) : null;
+  const [age, setAge] = useState(parsedAge?.value ?? '');
+  const [ageUnit, setAgeUnit] = useState<PetAgeUnit>(parsedAge?.unit ?? 'años');
+  const [ageChanged, setAgeChanged] = useState(false);
   const [contact, setContact] = useState(pet?.emergencyContact || '');
   const [status, setStatus] = useState<PetUpdate['status']>(pet?.status === 'lost' ? undefined : pet?.status ?? 'home');
   const [shareEmergencyContact, setShareEmergencyContact] = useState(pet?.shareEmergencyContact || false);
@@ -72,12 +76,17 @@ function PetEditor({
         setFormError('Escribe el nombre y la especie de la mascota.');
         return;
       }
+      const formattedAge = age ? formatPetAge(age, ageUnit) : null;
+      if (age && !formattedAge) {
+        setFormError('La edad debe ser un número entero de años o meses.');
+        return;
+      }
       setFormError('');
       onSaved({
         name: name.trim(),
-        species: species.trim(),
+        species: pet && species === pet.species ? species : species.trim(),
         breed: breed.trim() || null,
-        age: age.trim() || null,
+        age: ageChanged ? formattedAge : pet?.age ?? null,
         emergencyContact: contact.trim() || null,
         shareEmergencyContact,
       }, photo, status);
@@ -90,9 +99,10 @@ function PetEditor({
       {photoError && <p className="error-box" role="alert">{photoError}</p>}
       {formError && <p className="error-box full" role="alert">{formError}</p>}
       <div className="account-field"><label htmlFor="pet-name">Nombre</label><input id="pet-name" value={name} required maxLength={100} disabled={saving} onChange={e => setName(e.target.value)} autoFocus/></div>
-      <div className="account-field"><label htmlFor="pet-species">Especie</label><input id="pet-species" value={species} required maxLength={60} disabled={saving} onChange={e => setSpecies(e.target.value)} placeholder="Perro, gato…"/></div>
+      <div className="account-field"><label htmlFor="pet-species">Especie</label><select id="pet-species" value={species} required disabled={saving} onChange={e => setSpecies(e.target.value)}><option value="">Selecciona una especie</option>{pet && !isPetSpecies(pet.species) && <option value={pet.species}>{pet.species} (valor anterior)</option>}{petSpeciesOptions.map(option => <option key={option} value={option}>{option === 'Perro' ? 'Canino (perro)' : option === 'Gato' ? 'Felino (gato)' : option}</option>)}</select></div>
       <div className="account-field"><label htmlFor="pet-breed">Raza (opcional)</label><input id="pet-breed" value={breed} maxLength={120} disabled={saving} onChange={e => setBreed(e.target.value)}/></div>
-      <div className="account-field"><label htmlFor="pet-age">Edad (opcional)</label><input id="pet-age" value={age} maxLength={80} disabled={saving} onChange={e => setAge(e.target.value)} placeholder="Ej. 4 años"/></div>
+      <div className="account-field"><label htmlFor="pet-age">Edad (opcional)</label><input id="pet-age" type="number" inputMode="numeric" min="0" step="1" value={age} disabled={saving} onChange={e => { setAge(e.target.value); setAgeChanged(true); }} placeholder="Ej. 4"/>{pet?.age && !parsedAge && !ageChanged && <><small>Edad anterior: {pet.age}. Se conservará si no la cambias.</small><button type="button" className="text-link" disabled={saving} onClick={() => setAgeChanged(true)}>Quitar edad anterior</button></>}</div>
+      <div className="account-field"><label htmlFor="pet-age-unit">Unidad de edad</label><select id="pet-age-unit" value={ageUnit} disabled={saving} onChange={e => { setAgeUnit(e.target.value === 'meses' ? 'meses' : 'años'); if (age) setAgeChanged(true); }}><option value="años">Años</option><option value="meses">Meses</option></select></div>
       {pet && pet.status !== 'lost' && <div className="account-field"><label htmlFor="pet-status">Estado actual</label><select id="pet-status" value={status ?? 'home'} disabled={saving} onChange={e => setStatus(e.target.value as NonNullable<PetUpdate['status']>)}><option value="home">En casa</option><option value="walking">De paseo</option></select></div>}
       {pet?.status === 'lost' && <p className="notice-box">El estado de búsqueda se administra desde la sección “Mascotas perdidas”.</p>}
       <div className="account-field full"><label htmlFor="pet-emergency">Contacto de emergencia (opcional)</label><input id="pet-emergency" value={contact} maxLength={240} disabled={saving} onChange={e => setContact(e.target.value)} placeholder="Teléfono y nombre"/></div>

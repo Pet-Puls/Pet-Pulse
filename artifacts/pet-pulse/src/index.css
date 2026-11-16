@@ -208,7 +208,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .workspace-map-layout { display:grid; grid-template-columns:minmax(0,1.8fr) minmax(290px,.85fr); gap:16px; align-items:start; }
 .workspace-map-card { padding:12px; min-width:0; }
 .workspace-map-toolbar { min-height:40px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 4px 10px; color:#62776b; font-size:12px; font-weight:700; }
-.workspace-map-viewport { position:relative; }
+.workspace-map-viewport { position:relative; isolation:isolate; }
 .workspace-map-canvas { height:min(68vh,680px); min-height:440px; border-radius:13px; overflow:hidden; background:#e4e9e2; }
 .map-tile-error { position:absolute; z-index:500; top:12px; left:50%; display:flex; align-items:center; gap:10px; max-width:calc(100% - 24px); padding:9px 12px; border:1px solid #e8d2b9; border-radius:10px; background:#fffdf2; color:#775c35; box-shadow:0 2px 10px #30493622; font-size:11px; transform:translateX(-50%); }
 .map-tile-error button { border:0; background:transparent; color:#286354; font-weight:800; text-decoration:underline; }
@@ -374,6 +374,7 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
   .workspace-map-toolbar { gap: 8px; }
   .workspace-map-toolbar .account-button { width: 100%; }
   .workspace-map-canvas { height: 52svh; min-height: 300px; border-radius: 10px; }
+  .workspace-map-canvas .leaflet-popup-content { max-width: calc(100vw - 165px); overflow-wrap: anywhere; }
   .map-tile-error { width: calc(100% - 16px); justify-content: space-between; }
   .nearby-place-list { max-height: 42svh; }
   .pet-profile-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -482,6 +483,9 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 @media(max-width:560px) {
   .workspace-actions { flex-direction:column; align-items:stretch; }
   .workspace-actions .account-button { min-height:44px; }
+}
+@media(max-width:800px) {
+  .public-hero:before { top:min(290px, calc(100% - 540px)); }
 }
 @media(max-width:420px) {
   .mobile-nav { grid-template-columns:repeat(3,minmax(0,1fr)); }
