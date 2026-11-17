@@ -1330,12 +1330,14 @@ components:
           type: string
           minLength: 1
           maxLength: 60
+          description: Selección de Perro, Gato, Ave, Conejo, Roedor, Reptil, Pez u Otro.
         breed:
           type: ["string", "null"]
           maxLength: 120
         age:
           type: ["string", "null"]
           maxLength: 80
+          description: Edad opcional como entero no negativo seguro y unidad, por ejemplo "3 meses" o "1 año".
         emergencyContact:
           type: ["string", "null"]
           maxLength: 240
@@ -1356,12 +1358,14 @@ components:
           type: string
           minLength: 1
           maxLength: 60
+          description: Especie de la lista; un valor anterior distinto puede conservarse sin cambios.
         breed:
           type: ["string", "null"]
           maxLength: 120
         age:
           type: ["string", "null"]
           maxLength: 80
+          description: Edad opcional con número entero no negativo y unidad; un valor anterior puede conservarse sin cambios.
         emergencyContact:
           type: ["string", "null"]
           maxLength: 240

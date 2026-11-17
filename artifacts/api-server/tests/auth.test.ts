@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   tables: {
     userProfiles: { clerkUserId: { name: "clerkUserId" } },
     pets: {
+      id: { name: "id" },
       ownerId: { name: "ownerId" },
       createdAt: { name: "createdAt" },
       qrToken: { name: "qrToken" },
@@ -33,6 +34,7 @@ vi.mock("drizzle-orm", () => ({
   and: (...conditions: unknown[]) => conditions,
   asc: (column: unknown) => ({ column, direction: "asc" }),
   eq: (column: unknown, value: string) => ({ column, value }),
+  gt: (column: unknown, value: Date) => ({ column, value }),
   lte: (column: unknown, value: Date) => ({ column, value }),
   sql: () => ({}),
 }));
@@ -70,11 +72,14 @@ vi.mock("@workspace/db", () => ({
     }),
     select: () => ({
       from: (table: unknown) => ({
-        where: (condition: { column: { name: string }; value: string }) => {
+        where: (condition: { column: { name: string }; value: string } | Array<{ column: { name: string }; value: string }>) => {
           if (table === mocks.tables.lostPetReports) {
             return Promise.resolve([]);
           }
           const matchingRows = () => {
+            if (Array.isArray(condition)) {
+              return mocks.pets.filter(pet => condition.every(item => pet[item.column.name] === item.value));
+            }
             if (condition.column.name === "clerkUserId") {
               const profile = mocks.profiles.get(condition.value);
               return profile ? [profile] : [];
@@ -89,6 +94,19 @@ vi.mock("@workspace/db", () => ({
             orderBy: async () => matchingRows(),
           };
         },
+      }),
+    }),
+    update: (table: unknown) => ({
+      set: (values: Record<string, unknown>) => ({
+        where: (conditions: Array<{ column: { name: string }; value: string }>) => ({
+          returning: async () => {
+            if (table !== mocks.tables.pets) throw new Error("Unexpected update.");
+            const pet = mocks.pets.find(item => conditions.every(condition => item[condition.column.name] === condition.value));
+            if (!pet) return [];
+            Object.assign(pet, values);
+            return [pet];
+          },
+        }),
       }),
     }),
   },
@@ -225,10 +243,71 @@ describe("API authorization middleware", () => {
       headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
       body: JSON.stringify({ name: "  Ñandú  ", species: "  Ave  " }),
     });
-
     expect(response.status, await response.clone().text()).toBe(201);
     expect(await response.json()).toMatchObject({ name: "Ñandú", species: "Ave" });
     expect(mocks.pets[0]).toMatchObject({ name: "Ñandú", species: "Ave" });
+  });
+
+  it.each([
+    { species: "Perro", age: "joven" },
+    { species: "Perro", age: "-1 años" },
+    { species: "Perro", age: "1.5 años" },
+    { species: "Perro", age: "9007199254740992 años" },
+    { species: "Especie inventada", age: "3 meses" },
+  ])("rejects invalid new pet species and ages", async fields => {
+    addProfile("owner-user", "owner");
+    const response = await fetch(`${baseUrl}/api/pets`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify({ name: "Luna", ...fields }),
+    });
+    expect(response.status).toBe(400);
+    expect(mocks.pets).toHaveLength(0);
+  });
+
+  it.each(["3 meses", "0 años", "1 año", null])("accepts an optional valid age: %s", async age => {
+    addProfile("owner-user", "owner");
+    const response = await fetch(`${baseUrl}/api/pets`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify({ name: "Luna", species: "Gato", age }),
+    });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ species: "Gato", age });
+  });
+
+  it("preserves unchanged legacy fields while rejecting new invalid values", async () => {
+    const profile = addProfile("owner-user", "owner");
+    const id = "550e8400-e29b-41d4-a716-446655440000";
+    mocks.pets.push({
+      id, ownerId: profile.id, name: "Luna", species: "Cobaya", age: "joven",
+      breed: null, emergencyContact: null, photoPath: null, qrToken: null,
+      shareEmergencyContact: false, status: "home",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"), updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+    const update = (body: object) => fetch(`${baseUrl}/api/pets/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "owner-user" },
+      body: JSON.stringify(body),
+    });
+
+    const unchanged = await update({ species: "Cobaya", age: "joven" });
+    expect(unchanged.status).toBe(200);
+    const edited = await update({ name: "Luna QA", species: "Cobaya", age: "joven" });
+    expect(edited.status).toBe(200);
+    expect(await edited.json()).toMatchObject({ name: "Luna QA", species: "Cobaya", age: "joven" });
+    expect((await update({ age: "muy joven" })).status).toBe(400);
+    expect((await update({ species: "Otra inventada" })).status).toBe(400);
+    addProfile("other-owner", "owner");
+    const otherResponse = await fetch(`${baseUrl}/api/pets/${id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", "x-test-clerk-user": "other-owner" },
+      body: JSON.stringify({ age: "joven" }),
+    });
+    expect(otherResponse.status).toBe(404);
+    const corrected = await update({ species: "Otro", age: "1 año" });
+    expect(corrected.status).toBe(200);
+    expect(await corrected.json()).toMatchObject({ species: "Otro", age: "1 año" });
   });
 
   it("rejects requests without an authenticated identity", async () => {

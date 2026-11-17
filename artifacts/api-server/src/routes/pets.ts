@@ -12,6 +12,8 @@ import {
   UpdatePetBody,
   UpdatePetParams,
   UpdatePetResponse,
+  isPetSpecies,
+  parsePetAge,
 } from "@workspace/api-zod";
 import { db, lostPetReportsTable, petsTable } from "@workspace/db";
 import { expireLostPetReports } from "../lib/lostPetReports";
@@ -104,6 +106,14 @@ router.post("/pets", requireRole("owner"), async (req, res): Promise<void> => {
     res.status(400).json({ error: "El nombre y la especie son obligatorios." });
     return;
   }
+  if (!isPetSpecies(parsed.data.species.trim())) {
+    res.status(400).json({ error: "Selecciona una especie de la lista." });
+    return;
+  }
+  if (parsed.data.age?.trim() && !parsePetAge(parsed.data.age.trim())) {
+    res.status(400).json({ error: "La edad debe ser un número entero de años o meses." });
+    return;
+  }
 
   const profile = req.petPulseProfile;
   if (!profile) {
@@ -160,6 +170,31 @@ router.patch(
       return;
     }
 
+    const invalidSpecies = parsed.data.species !== undefined && !isPetSpecies(parsed.data.species.trim());
+    const invalidAge = Boolean(parsed.data.age?.trim() && !parsePetAge(parsed.data.age.trim()));
+    let unchangedLegacySpecies = false;
+    let unchangedLegacyAge = false;
+    let existingLegacy: typeof petsTable.$inferSelect | undefined;
+    if (invalidSpecies || invalidAge) {
+      [existingLegacy] = await db.select().from(petsTable).where(
+        and(eq(petsTable.id, params.data.petId), eq(petsTable.ownerId, profile.id)),
+      ).limit(1);
+      if (!existingLegacy) {
+        res.status(404).json({ error: "No se encontró esa mascota en tu cuenta." });
+        return;
+      }
+      unchangedLegacySpecies = invalidSpecies && parsed.data.species === existingLegacy.species;
+      unchangedLegacyAge = invalidAge && parsed.data.age === existingLegacy.age;
+      if (invalidSpecies && !unchangedLegacySpecies) {
+        res.status(400).json({ error: "Selecciona una especie de la lista." });
+        return;
+      }
+      if (invalidAge && !unchangedLegacyAge) {
+        res.status(400).json({ error: "La edad debe ser un número entero de años o meses." });
+        return;
+      }
+    }
+
     if (parsed.data.status !== undefined) {
       const [activeReport] = await db
         .select({ id: lostPetReportsTable.id })
@@ -181,19 +216,20 @@ router.patch(
       }
     }
 
+    const { species, age, ...otherFields } = parsed.data;
     const update = {
-      ...parsed.data,
+      ...otherFields,
       ...(parsed.data.name !== undefined
         ? { name: parsed.data.name.trim() }
         : {}),
-      ...(parsed.data.species !== undefined
-        ? { species: parsed.data.species.trim() }
+      ...(species !== undefined && !unchangedLegacySpecies
+        ? { species: species.trim() }
         : {}),
       ...(parsed.data.breed !== undefined
         ? { breed: parsed.data.breed?.trim() || null }
         : {}),
-      ...(parsed.data.age !== undefined
-        ? { age: parsed.data.age?.trim() || null }
+      ...(age !== undefined && !unchangedLegacyAge
+        ? { age: age?.trim() || null }
         : {}),
       ...(parsed.data.emergencyContact !== undefined
         ? { emergencyContact: parsed.data.emergencyContact?.trim() || null }
@@ -202,6 +238,11 @@ router.patch(
         ? { shareEmergencyContact: parsed.data.shareEmergencyContact }
         : {}),
     };
+
+    if (Object.keys(update).length === 0 && existingLegacy) {
+      res.json(UpdatePetResponse.parse(await toPetProfile(existingLegacy)));
+      return;
+    }
 
     const [pet] = await db
       .update(petsTable)

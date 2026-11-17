@@ -111,7 +111,7 @@ export default function WorkspaceMapPage() {
       report.rel = 'noopener noreferrer';
       report.textContent = 'Reportar dato a OpenStreetMap';
       popup.append(name, detail, report);
-      marker.bindPopup(popup);
+      marker.bindPopup(popup, { autoPanPaddingTopLeft: L.point(50, 80) });
     });
   }, [center, visiblePlaces]);
 

@@ -1,6 +1,6 @@
 import { useAuth, useClerk } from '@clerk/react';
 import {
-  getGetMeQueryKey, useGetMe,
+  ApiError, getGetMeQueryKey, useGetMe,
 } from '@workspace/api-client-react';
 import type { MeProfile } from '@workspace/api-client-react';
 import {
@@ -28,7 +28,13 @@ export function ErrorPanel({ message, retry }: { message: string; retry: () => v
 }
 
 export function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'No pudimos completar la solicitud. Inténtalo de nuevo.';
+  const fallback = 'No pudimos completar la solicitud. Inténtalo de nuevo.';
+  if (error instanceof ApiError) {
+    const prefix = `HTTP ${error.status} ${error.statusText}`;
+    const detail = error.message.slice(prefix.length).replace(/^:\s*/, '').trim();
+    return detail || fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function PageHeading({ kicker, title, subtitle, action }: { kicker: string; title: string; subtitle: string; action?: ReactNode }) {

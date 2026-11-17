@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { formatPetAge, petSpeciesOptions } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,7 +8,7 @@ import NotFound from '@/pages/not-found';
 import { Route, Switch, useLocation, Router as WouterRouter, Link } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import {
-  Activity, AlertTriangle, ArrowRight, CalendarDays, Check, ChevronRight,
+  Activity, AlertTriangle, ArrowLeft, ArrowRight, CalendarDays, Check, ChevronRight,
   CircleHelp, Clock3, Dog, Heart, Home, MapPin, Menu, Navigation, PawPrint,
   Plus, QrCode, Search, ShieldCheck, Store, Stethoscope, UserRound, Users,
   Waves, X, Star, Footprints, ScanLine, Bone, Building2, Bell, LocateFixed,
@@ -75,7 +76,7 @@ function AppState({ children }: { children: (state: State) => ReactNode }) {
 }
 type State = { role: Role; setRole: (r: Role) => void; pets: Pet[]; setPets: (p: Pet[] | ((prev: Pet[]) => Pet[])) => void; providers: Provider[]; setProviders: (p: Provider[] | ((prev: Provider[]) => Provider[])) => void; appointments: Appointment[]; setAppointments: (a: Appointment[] | ((prev: Appointment[]) => Appointment[])) => void; alerts: LostAlert[]; setAlerts: (a: LostAlert[] | ((prev: LostAlert[]) => LostAlert[])) => void; notify: (s: string) => void };
 
-function Shell({ children, state }: { children: ReactNode; state: State }) {
+function Shell({ children, state, standalone }: { children: ReactNode; state: State; standalone: boolean }) {
   const [path] = useLocation();
   const activeAlerts = state.alerts.filter(a => a.status === 'active');
   const menuItems = state.role === 'provider'
@@ -92,7 +93,10 @@ function Shell({ children, state }: { children: ReactNode; state: State }) {
       <div className="side-bottom"><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 9 }}><CircleHelp size={15}/> Un lugar más seguro para ellos.</div><div>Prototipo interactivo · datos simulados</div></div>
     </aside>
     <div className="main-area">
-      <div className="demo-banner"><CircleHelp size={15}/> Demostración interactiva · datos locales de prueba, aislados de las cuentas PetPulse</div>
+      <div className="demo-banner">
+        <span className="demo-banner-message"><CircleHelp size={15}/> Demostración interactiva · datos locales de prueba, aislados de las cuentas PetPulse</span>
+        {!standalone && <a className="demo-exit" href={import.meta.env.BASE_URL}><ArrowLeft size={15}/> Salir de la demostración</a>}
+      </div>
       <header className="topbar">
         <div className="crumb">Medellín <span style={{ margin: '0 8px', color: '#b7bcb1' }}>/</span><strong style={{ color: '#315c52' }}>{pageTitle[path] || 'PetPulse'}</strong></div>
         <div className="top-right">
@@ -176,7 +180,7 @@ function PetPage({ state }: { state: State }) {
     <Heading eyebrow="Su identidad, siempre a mano" title="Mis mascotas" desc="Perfiles sencillos para que cualquier persona pueda ayudarles." action={<button className="btn" onClick={() => setShowAdd(true)} data-testid="button-add-pet"><Plus size={16}/> Añadir mascota</button>}/>
     {state.pets.length === 0 ? <section className="panel"><Empty icon={PawPrint} title="Aún no hay mascotas" text="Crea el primer perfil para tener su información importante a mano."/></section> : <div className="grid grid-3">{state.pets.map(pet => <PetCard key={pet.id} pet={pet} onQR={() => setQrPet(pet)} onLost={() => toggleLost(pet)}/>)}</div>}
     <div className="section-row"><h2 className="display">Identificación de emergencia</h2></div><section className="panel grid grid-2" style={{ alignItems: 'center' }}><div><div className="stat-icon" style={{ width: 42, height: 42, marginBottom: 13 }}><ScanLine size={20}/></div><h2 className="display">Una ayuda a un escaneo de distancia.</h2><p className="subtle">Cada mascota tiene una ficha QR simulada con su nombre y contacto de emergencia. No se realiza ningún escaneo real.</p><button className="btn secondary" onClick={() => setQrPet(state.pets[0] || null)} disabled={!state.pets.length} data-testid="button-scan-qr"><QrCode size={16}/> Simular lectura QR</button></div><div style={{ display: 'flex', justifyContent: 'center' }}><div className="qr-code" aria-label="Código QR de demostración"/></div></section>
-    {showAdd && <Modal title="Nueva mascota" onClose={() => setShowAdd(false)}><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const name = String(f.get('name')).trim(); if (!name) return; const pet: Pet = { id: `p-${Date.now()}`, name, species: String(f.get('species')), breed: `${String(f.get('breed') || 'Sin raza indicada')} · ${String(f.get('age'))}`, age: String(f.get('age')), emergency: String(f.get('emergency')), status: 'home', x: 50, y: 50, color: ['peach', 'sage', 'lilac'][state.pets.length % 3] }; state.setPets(prev => [...prev, pet]); setShowAdd(false); state.notify(`${name} ya forma parte de PetPulse.`); }}><div className="form-grid"><Field label="Nombre"><input className="field" name="name" required placeholder="Ej. Chispa" data-testid="input-pet-name"/></Field><Field label="Especie"><select className="field" name="species" data-testid="select-pet-species"><option>Perro</option><option>Gato</option><option>Otro</option></select></Field><Field label="Raza"><input className="field" name="breed" placeholder="Ej. Mestiza" data-testid="input-pet-breed"/></Field><Field label="Edad"><input className="field" name="age" placeholder="Ej. 3 años" data-testid="input-pet-age"/></Field><Field label="Contacto de emergencia" full><input className="field" name="emergency" required placeholder="+57 300 000 0000 · Nombre" data-testid="input-emergency-contact"/></Field></div><div className="form-actions"><button type="button" className="btn ghost" onClick={() => setShowAdd(false)}>Cancelar</button><button className="btn" type="submit" data-testid="button-save-pet"><Plus size={15}/> Guardar perfil</button></div></form></Modal>}
+    {showAdd && <Modal title="Nueva mascota" onClose={() => setShowAdd(false)}><form onSubmit={e => { e.preventDefault(); const f = new FormData(e.currentTarget); const name = String(f.get('name')).trim(); if (!name) { state.notify('Escribe el nombre de la mascota.'); return; } const ageValue = String(f.get('age') || ''); const age = ageValue ? formatPetAge(ageValue, f.get('ageUnit') === 'meses' ? 'meses' : 'años') : ''; if (ageValue && !age) { state.notify('La edad debe ser un número entero de años o meses.'); return; } const breed = String(f.get('breed') || '').trim() || 'Sin raza indicada'; const pet: Pet = { id: `p-${Date.now()}`, name, species: String(f.get('species')), breed: age ? `${breed} · ${age}` : breed, age: age || '', emergency: String(f.get('emergency')), status: 'home', x: 50, y: 50, color: ['peach', 'sage', 'lilac'][state.pets.length % 3] }; state.setPets(prev => [...prev, pet]); setShowAdd(false); state.notify(`${name} ya forma parte de PetPulse.`); }}><div className="form-grid"><Field label="Nombre"><input className="field" name="name" required placeholder="Ej. Chispa" data-testid="input-pet-name"/></Field><Field label="Especie"><select className="field" name="species" data-testid="select-pet-species">{petSpeciesOptions.map(option => <option key={option} value={option}>{option === 'Perro' ? 'Canino (perro)' : option === 'Gato' ? 'Felino (gato)' : option}</option>)}</select></Field><Field label="Raza"><input className="field" name="breed" placeholder="Ej. Mestiza" data-testid="input-pet-breed"/></Field><Field label="Edad (opcional)"><input className="field" name="age" type="number" inputMode="numeric" min="0" step="1" placeholder="Ej. 3" data-testid="input-pet-age"/></Field><Field label="Unidad de edad"><select className="field" name="ageUnit"><option value="años">Años</option><option value="meses">Meses</option></select></Field><Field label="Contacto de emergencia" full><input className="field" name="emergency" required placeholder="+57 300 000 0000 · Nombre" data-testid="input-emergency-contact"/></Field></div><div className="form-actions"><button type="button" className="btn ghost" onClick={() => setShowAdd(false)}>Cancelar</button><button className="btn" type="submit" data-testid="button-save-pet"><Plus size={15}/> Guardar perfil</button></div></form></Modal>}
     {qrPet && <Modal title={`Ficha de ${qrPet.name}`} onClose={() => setQrPet(null)}><div className="qr-card"><div className="qr-code"/><strong className="display" style={{ fontSize: 20 }}>{qrPet.name}</strong><p className="subtle" style={{ margin: '5px 0 0' }}>Código de identificación simulado</p></div><div style={{ marginTop: 18, padding: '16px', border: '1px solid #e7e3d8', borderRadius: 13 }}><div className="eyebrow">Información de emergencia</div><strong>{qrPet.species} · {qrPet.breed.split(' · ')[0]}</strong><p className="subtle" style={{ margin: '6px 0 0' }}>{qrPet.emergency || 'Contacto no indicado'}</p></div><div className="notice" style={{ marginTop: 13 }}><ShieldCheck size={15}/> Escaneo de demostración. No se envía ni publica información.</div></Modal>}
   </main>;
 }
@@ -232,9 +236,9 @@ function AdminPage({ state }: { state: State }) {
     <div className="grid grid-2" style={{ marginTop: 18 }}><section className="panel"><div className="eyebrow">Actividad de la red</div><h2 className="display">Pulso de PetPulse</h2><div className="appointment"><div className="stat-icon"><Building2 size={16}/></div><div className="appointment-main"><strong>Proveedores en el directorio</strong><p>Clínicas, paseos, refugios y más</p></div><strong>{state.providers.length}</strong></div><div className="appointment"><div className="stat-icon"><CalendarDays size={16}/></div><div className="appointment-main"><strong>Solicitudes de cita</strong><p>Guardadas de forma local</p></div><strong>{state.appointments.length}</strong></div><div className="appointment"><div className="stat-icon"><Bell size={16}/></div><div className="appointment-main"><strong>Alertas resueltas</strong><p>Seguimiento de la red</p></div><strong>{state.alerts.filter(a => a.status === 'resolved').length}</strong></div></section><section className="panel" style={{ background: '#e9f0e5' }}><div className="eyebrow">Transparencia</div><h2 className="display">Un prototipo, con límites claros.</h2><p className="subtle">Los perfiles, ubicaciones, movimientos y alertas son simulados. No hay GPS real, backend ni notificaciones externas. Los cambios se guardan solo en este navegador.</p><div className="notice"><ShieldCheck size={16}/> La información de emergencia solo se muestra en la ficha QR de demostración.</div></section></div>
   </main>;
 }
-function Router() {
+function Router({ standalone }: { standalone: boolean }) {
   const [location] = useLocation();
-  return <AppState>{state => <Shell state={state}><ErrorBoundary resetKey={location}><Switch>
+  return <AppState>{state => <Shell state={state} standalone={standalone}><ErrorBoundary resetKey={location}><Switch>
     <Route path="/"><HomePage state={state}/></Route>
     <Route path="/map"><MapPage state={state}/></Route>
     <Route path="/pets"><PetPage state={state}/></Route>
@@ -246,7 +250,7 @@ function Router() {
 }
 export function DemoApp({ standalone = false }: { standalone?: boolean }) {
   const router = standalone
-    ? <WouterRouter hook={useHashLocation}><Router/></WouterRouter>
-    : <WouterRouter base={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo`}><Router/></WouterRouter>;
+    ? <WouterRouter hook={useHashLocation}><Router standalone/></WouterRouter>
+    : <WouterRouter base={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/demo`}><Router standalone={false}/></WouterRouter>;
   return <QueryClientProvider client={client}><TooltipProvider>{router}<Toaster/></TooltipProvider></QueryClientProvider>;
 }
