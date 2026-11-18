@@ -49,5 +49,23 @@ export const providerProfilesTable = pgTable(
   ],
 );
 
+export const providerApprovalAuditTable = pgTable(
+  "petpulse_provider_approval_audit",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    providerProfileId: uuid("provider_profile_id")
+      .notNull()
+      .references(() => providerProfilesTable.id, { onDelete: "cascade" }),
+    actorProfileId: uuid("actor_profile_id").references(() => userProfilesTable.id, {
+      onDelete: "set null",
+    }),
+    actorEmail: text("actor_email").notNull(),
+    previousStatus: providerApprovalStatusEnum("previous_status").notNull(),
+    approvalStatus: providerApprovalStatusEnum("approval_status").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("petpulse_provider_approval_audit_provider_idx").on(table.providerProfileId)],
+);
+
 export type ProviderProfileRecord = typeof providerProfilesTable.$inferSelect;
 export type InsertProviderProfileRecord = typeof providerProfilesTable.$inferInsert;

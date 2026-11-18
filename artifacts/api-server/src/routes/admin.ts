@@ -11,6 +11,7 @@ import {
 import {
   db,
   petsTable,
+  providerApprovalAuditTable,
   providerProfilesTable,
   userProfilesTable,
 } from "@workspace/db";
@@ -78,23 +79,55 @@ router.patch(
       return;
     }
 
-    const [provider] = await db
-      .update(providerProfilesTable)
-      .set({
-        approvalStatus: parsed.data.approvalStatus,
-        approvedAt:
-          parsed.data.approvalStatus === "approved" ? new Date() : null,
-        updatedAt: new Date(),
-      })
-      .where(eq(providerProfilesTable.id, params.data.providerId))
-      .returning();
+    const actor = req.petPulseProfile;
+    if (!actor) {
+      res.status(403).json({ error: "Completa la configuración de tu cuenta." });
+      return;
+    }
 
-    if (!provider) {
+    const result = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(providerProfilesTable)
+        .where(eq(providerProfilesTable.id, params.data.providerId))
+        .for("update")
+        .limit(1);
+      if (!existing) return null;
+
+      if (existing.approvalStatus === parsed.data.approvalStatus) {
+        return existing;
+      }
+
+      const now = new Date();
+      const [provider] = await tx
+        .update(providerProfilesTable)
+        .set({
+          approvalStatus: parsed.data.approvalStatus,
+          approvedAt: parsed.data.approvalStatus === "approved" ? now : null,
+          updatedAt: now,
+        })
+        .where(eq(providerProfilesTable.id, params.data.providerId))
+        .returning();
+
+      if (provider) {
+        await tx.insert(providerApprovalAuditTable).values({
+          providerProfileId: provider.id,
+          actorProfileId: actor.id,
+          actorEmail: actor.email,
+          previousStatus: existing.approvalStatus,
+          approvalStatus: provider.approvalStatus,
+          createdAt: now,
+        });
+      }
+      return provider;
+    });
+
+    if (!result) {
       res.status(404).json({ error: "No se encontró ese perfil de proveedor." });
       return;
     }
 
-    res.json(UpdateProviderApprovalResponse.parse(provider));
+    res.json(UpdateProviderApprovalResponse.parse(result));
   },
 );
 

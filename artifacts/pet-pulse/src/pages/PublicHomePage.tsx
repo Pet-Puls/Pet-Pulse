@@ -26,7 +26,7 @@ export default function PublicHomePage() {
         <div className="public-copy">
           <span className="public-kicker">Una comunidad que cuida</span>
           <h1>Su vida diaria,<br/>más <em>cerca.</em></h1>
-          <p>PetPulse reúne el cuidado de tu mascota y a las personas de confianza de tu barrio. Todo lo importante, en un espacio claro y solo tuyo.</p>
+          <p>PetPulse reúne la información de tu mascota y te ayuda a descubrir servicios locales para su cuidado, en un espacio claro y personal.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <ActionLink href="/sign-up">Empieza con PetPulse <ArrowRight size={16}/></ActionLink>
             <ActionLink href="/demo" light>Explorar la demostración</ActionLink>
@@ -34,7 +34,7 @@ export default function PublicHomePage() {
         </div>
         <div className="public-art" aria-label="Ilustración de una huella rodeada por círculos de comunidad">
           <div className="orbit"><div className="orbit-center"><PawPrint /></div>
-            <span className="orbit-label one">Cuidado de confianza</span>
+            <span className="orbit-label one">Servicios locales</span>
             <span className="orbit-label two">Su día, a tu manera</span>
             <span className="orbit-label three">Tu comunidad local</span>
           </div>
@@ -52,7 +52,7 @@ export default function PublicHomePage() {
           <article className="care-feature"><div><span className="public-kicker" style={{ color: '#e9c67f' }}>Para tutores</span><h3>Todo sobre ellos, en un sitio que se siente propio.</h3></div><div><p>Guarda sus perfiles y datos importantes con acceso privado. Tu cuenta te acompaña, sin mezclar nada con la demostración.</p><ActionLink href="/sign-up" light>Crear mi cuenta <ArrowRight size={14}/></ActionLink></div></article>
           <div className="care-aside">
             <article className="care-tile"><div><Heart size={21}/><h3>Una comunidad más cercana</h3></div><p>Encuentra profesionales locales que forman parte del día a día de las mascotas.</p></article>
-            <article className="care-tile"><div><ShieldCheck size={21}/><h3>Claridad en cada paso</h3></div><p>Perfiles de proveedor con revisión y estados visibles para una experiencia confiable.</p></article>
+            <article className="care-tile"><div><ShieldCheck size={21}/><h3>Claridad en cada paso</h3></div><p>El estado aprobado indica que el equipo revisó la información del perfil. No certifica la calidad ni la disponibilidad del servicio.</p></article>
           </div>
         </div>
       </section>

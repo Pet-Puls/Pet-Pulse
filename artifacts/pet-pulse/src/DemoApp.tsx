@@ -87,6 +87,9 @@ function Shell({ children, state }: { children: ReactNode; state: State }) {
       <div className="side-bottom"><div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 9 }}><CircleHelp size={15}/> Un lugar más seguro para ellos.</div><div>Prototipo interactivo · datos simulados</div></div>
     </aside>
     <div className="main-area">
+      <div role="note" className="demo-banner" style={{ background: '#f3e6c8', color: '#604719', padding: '10px 4.2%', fontSize: 12, fontWeight: 700 }}>
+        Demostración: perfiles y métricas ficticios. Las acciones se guardan solo en este navegador; no crean solicitudes ni alertas reales.
+      </div>
       <header className="topbar">
         <div className="crumb">Madrid <span style={{ margin: '0 8px', color: '#b7bcb1' }}>/</span><strong style={{ color: '#315c52' }}>{pageTitle[path] || 'PetPulse'}</strong></div>
         <div className="top-right">
