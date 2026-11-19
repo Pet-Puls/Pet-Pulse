@@ -142,8 +142,15 @@ h1,h2,h3,p { margin-top:0; } h1 { font-size:clamp(30px,4vw,43px);line-height:1.0
 .nearby-places-panel { min-width:0; }
 .nearby-places-panel h2 { margin:8px 0; color:#285247; font-size:21px; }
 .map-data-note { margin:10px 0; color:#7a877e; font-size:11px; line-height:1.5; }
-.map-category-filter { display:grid; gap:6px; margin:17px 0 12px; color:#52695d; font-size:12px; font-weight:700; }
-.map-category-filter .field { width:100%; min-height:40px; border:1px solid #dfe3d8; border-radius:9px; background:#fffefa; padding:8px 10px; color:#294b42; }
+.map-interest-filter { min-width:0; border:0; margin:17px 0 12px; padding:0; color:#52695d; }
+.map-interest-filter legend { margin-bottom:5px; font-size:12px; font-weight:700; }
+.map-interest-filter > p { margin:0 0 10px; color:#76847b; font-size:11px; line-height:1.5; }
+.map-interest-options { display:flex; flex-wrap:wrap; gap:7px; }
+.map-interest-option { display:flex; align-items:center; gap:6px; min-height:34px; border:1px solid #dfe3d8; border-radius:999px; background:#fffefa; padding:6px 10px; color:#52695d; font-size:11px; cursor:pointer; }
+.map-interest-option.selected { border-color:#9bb9a7; background:#eaf1e8; color:#285247; font-weight:700; }
+.map-interest-option input { width:14px; height:14px; margin:0; accent-color:#285247; }
+.map-show-all { margin-top:10px; border:0; background:transparent; padding:4px 0; color:#286354; font-size:11px; font-weight:700; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.map-filter-summary { margin:5px 0 10px; color:#52695d; font-size:11px; }
 .nearby-place-list { display:grid; gap:4px; max-height:430px; overflow-y:auto; }
 .nearby-place { display:flex; gap:10px; padding:12px 0; border-top:1px solid #ecebe3; }
 .nearby-place-icon { flex:none; width:32px; height:32px; display:grid; place-items:center; border-radius:11px; background:#f7e5d7; color:#9f5847; }

@@ -8,9 +8,27 @@ import {
   categories, medellinCenter, nearbyRadiusMeters,
 } from '@/features/map/types';
 import type {
-  Coordinates, LocationResult, NearbyPlace,
+  Coordinates, LocationResult, NearbyPlace, PlaceCategory,
 } from '@/features/map/types';
 import { getLocationError, searchLocations, searchNearbyPlaces } from '@/features/map/map-service';
+
+const mapInterestsStorageKey = 'petpulse-map-interests-v1';
+const placeCategories = categories.filter((category): category is PlaceCategory => category !== 'Todos');
+
+function readMapInterests(): PlaceCategory[] {
+  if (typeof window === 'undefined') return ['Veterinaria'];
+  try {
+    const stored = window.localStorage.getItem(mapInterestsStorageKey);
+    if (!stored) return ['Veterinaria'];
+    const parsed: unknown = JSON.parse(stored);
+    if (!Array.isArray(parsed)) return ['Veterinaria'];
+    return parsed.filter((category): category is PlaceCategory =>
+      typeof category === 'string' && placeCategories.includes(category as PlaceCategory),
+    );
+  } catch {
+    return ['Veterinaria'];
+  }
+}
 
 export default function WorkspaceMapPage() {
   const mapElement = useRef<HTMLDivElement>(null);
@@ -22,7 +40,7 @@ export default function WorkspaceMapPage() {
   const locationRequestId = useRef(0);
   const [center, setCenter] = useState<(Coordinates & { label: string }) | null>(medellinCenter);
   const [places, setPlaces] = useState<NearbyPlace[]>([]);
-  const [filter, setFilter] = useState<(typeof categories)[number]>('Todos');
+  const [interests, setInterests] = useState<PlaceCategory[]>(readMapInterests);
   const [searchText, setSearchText] = useState('');
   const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
   const [isLocating, setIsLocating] = useState(false);
@@ -33,9 +51,23 @@ export default function WorkspaceMapPage() {
   const [searchMessage, setSearchMessage] = useState('');
 
   const visiblePlaces = useMemo(
-    () => filter === 'Todos' ? places : places.filter(place => place.category === filter),
-    [filter, places],
+    () => places.filter(place => interests.includes(place.category)),
+    [interests, places],
   );
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(mapInterestsStorageKey, JSON.stringify(interests));
+    } catch {
+      // Keep the map usable when browser storage is unavailable.
+    }
+  }, [interests]);
+
+  function toggleInterest(category: PlaceCategory) {
+    setInterests(current => current.includes(category)
+      ? current.filter(interest => interest !== category)
+      : [...current, category]);
+  }
 
   useEffect(() => {
     if (!mapElement.current) return;
@@ -297,12 +329,30 @@ export default function WorkspaceMapPage() {
           <p className="map-data-note">
             Mostramos lugares registrados en OpenStreetMap. Los espacios para eventos no son una agenda de eventos actuales.
           </p>
-          <label className="account-field map-category-filter">
-            <span>Filtrar por tipo</span>
-            <select className="field" value={filter} onChange={event => setFilter(event.target.value as (typeof categories)[number])}>
-              {categories.map(category => <option key={category}>{category}</option>)}
-            </select>
-          </label>
+          <fieldset className="map-interest-filter">
+            <legend>Mis intereses</legend>
+            <p>Elige qué lugares quieres ver. Guardaremos tu selección en este navegador.</p>
+            <div className="map-interest-options">
+              {placeCategories.map(category => (
+                <label className={`map-interest-option${interests.includes(category) ? ' selected' : ''}`} key={category}>
+                  <input
+                    type="checkbox"
+                    checked={interests.includes(category)}
+                    onChange={() => toggleInterest(category)}
+                  />
+                  {category}
+                </label>
+              ))}
+            </div>
+            <button className="map-show-all" type="button" onClick={() => setInterests(placeCategories)}>
+              Mostrar todas las categorías
+            </button>
+          </fieldset>
+          <p className="map-filter-summary" role="status">
+            {interests.length
+              ? `Mostrando ${visiblePlaces.length} de ${places.length} lugares según tus intereses.`
+              : 'Elige al menos una categoría para mostrar lugares.'}
+          </p>
 
           {isLoadingPlaces ? (
             <div className="map-empty-state" role="status">Buscando lugares cercanos…</div>
@@ -327,8 +377,10 @@ export default function WorkspaceMapPage() {
               <Navigation size={23}/>
               <strong>{center ? 'No hay resultados para este filtro' : 'La búsqueda empieza contigo'}</strong>
               <span>
-                {center
-                  ? 'Prueba otro tipo de lugar o busca otra zona.'
+                {center && interests.length
+                  ? 'No encontramos lugares de las categorías seleccionadas. Prueba otros intereses o busca otra zona.'
+                  : center
+                    ? 'Elige al menos una categoría para ver lugares.'
                   : 'La ubicación se solicita solo cuando pulsas “Usar mi ubicación”.'}
               </span>
             </div>
