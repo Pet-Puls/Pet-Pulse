@@ -26,7 +26,6 @@ Es un proyecto académico del programa SENA/ADSO. Usa datos comprobados y está 
 16. [Limitaciones y fuera de alcance](#limitaciones-y-fuera-de-alcance)
 17. [Documentación](#documentación)
 18. [Equipo y organización del trabajo](#equipo-y-organización-del-trabajo)
-19. [Licencia](#licencia)
 
 ---
 
